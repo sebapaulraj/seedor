@@ -1,6 +1,8 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, constr
 from typing import List, Optional
-from app.db.models import Address,Access,Agreement,Consent,Shipment,Shipmenttracking
+from app.db.accessmodel import Access
+from app.db.models import Agreement,Shipment,Shipmenttracking
+from app.db.addressmodel import Address
 
 base_model_config = ConfigDict(
     arbitrary_types_allowed=True,
@@ -162,7 +164,7 @@ class AddressDeleteIN(BaseModel):
    
 
 class AddressGetIN(BaseModel):
-    idaddress:str
+    addressId:str
    
 class AddressGetOUT(BaseModel):
     listAddress:List[AddressBase]
@@ -247,47 +249,25 @@ class AgreementDeleteIN(BaseModel):
     idagreement:str
 
 class AgreementGetIN(BaseModel):
-    idagreement:str
+    agreementId:str
    
 class AgreementGetOUT(BaseModel):
     listAgreement:List[AgreementBase]
     statuscode:str
     statusmessage:str
     
-#---------- Consent -------------#
-
-class ConsentNewIN(BaseModel):
-    offerorIdUser : str
-    signatoryIdUser: str 
-    offerorSeedorId : str 
-    signatorySeedorId : str 
-    itemType: str
-    itemId:str
-    status:str    
-    isActive:bool
-
-class ConsentOut(BaseModel):
-    idconsent:str
-    isActive:bool
-    statuscode:str
-    statusmessage:str 
-
-class ConsentUpdateIN(BaseModel):
-    idconsent:str
-    isActive:str
-    
-class ConsentGetIN(BaseModel):
-    idconsent:str
-   
-class ConsentGetOUT(BaseModel):
-    idconsent:str
-    listConsent:List[Consent]
-    statuscode:str
-    statusmessage:str
-    model_config = base_model_config
 
 #----------Shipment -------------#
 
+class ShipmentBase(BaseModel):
+    shipmentCode:str  
+    idUser : str
+    label : str
+    shipperId:str
+    shipperName:str
+    description:str
+    isActive:bool
+   
 class ShipmentNewIN(BaseModel):
     shipmentCode : str
     idUser: str 
@@ -308,16 +288,27 @@ class ShipmentUpdateIN(BaseModel):
     isActive:str
     
 class ShipmentGetIN(BaseModel):
-    idshipment:str
+    shipmentCode:str
    
 class ShipmentGetOUT(BaseModel):
-    idshipment:str
-    listShipment:List[Shipment]
+    listShipment:List[ShipmentBase]
     statuscode:str
     statusmessage:str
-    model_config = base_model_config
+  
 
 #----------Shipment Tracking-------------#
+
+class ShipmenttrackingBase(BaseModel):
+    idshipment:str  
+    idUserSeedorId:str 
+    shipmentCode :str
+    shipmentTransitCode:str
+    shipmentTransitTitle:str
+    shipmenttrackingcontent:str
+    shipmentTransitSummary:str
+    shipmentTransitDetail:str
+    isActive:bool
+      
 
 class ShipmenttrackingNewIN(BaseModel):
     idshipment : str
@@ -345,12 +336,10 @@ class ShipmenttrackingGetIN(BaseModel):
    
 class ShipmenttrackingGetOUT(BaseModel):
     idshipmenttracking:str
-    listShipmenttracking:List[Shipmenttracking]
+    listShipmenttracking:List[ShipmenttrackingBase]
     statuscode:str
     statusmessage:str
-    model_config = base_model_config
-
-
+  
 
 class Config:
     orm_mode = True

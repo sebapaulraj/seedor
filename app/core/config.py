@@ -8,6 +8,7 @@ from typing import List
 class Settings(BaseModel):
     # Database
     INSTANCE_CONNECTION_NAME: str
+    DB_HOST: str
     DB_USER: str
     DB_PASS: str
     DB_NAME: str
@@ -67,6 +68,8 @@ def get_config_filepath() -> str:
         return "server.uat.properties"
     elif env == "prod":
         return "server.prod.properties"
+    elif env == "local":
+        return "server.local.properties"
     else:
         raise ValueError(f"Unsupported environment: {env}")
 

@@ -14,7 +14,7 @@
         "jinja": true,
         //"program": "${workspaceFolder}/your_script.py",
         "env": {
-            "ENV": "dev"      // Set the ENV variable to "dev"
+            "ENV": "local"      // Set the ENV variable to "dev"
             //"BACKEND_URL": "https://dev.example.com"  // Another example environment variable
             },
         "envFile": "${workspaceFolder}/.seedorvenv"

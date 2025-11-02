@@ -10,7 +10,8 @@ from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.config import settings
 from app.db.db import get_db, engine
-from app.db.models import Base, Address, Profile
+from app.db.usermodel import Profile
+from app.db.addressmodel import Base, Address
 from app.schemas.schemas import AddressBase, AddressDeleteIN, AddressNewIN, AddressOut, AddressGetIN,AddressGetOUT,AddressUpdateIN
 from app.api.auth import hash_password, create_access_token, verify_password,verify_access_token,get_bearer_token,manual_basic_auth,verify_basic_auth
 from app.core.rate_limit import check_rate_limit
@@ -33,7 +34,7 @@ def addAddress(payload: dict,address_in: AddressNewIN, request: Request, db: Ses
     )   
     
     tmp_count= db.query(func.count(Address.idaddress)).filter(Address.idUser == userId).scalar()
-    if tmp_count==0:
+    if not tmp_count or tmp_count==0:
         tmp_count=1
     profile=db.query(Profile).filter(Profile.idprofile == profileId).first()
 
@@ -97,6 +98,7 @@ def updateAddress(payload: dict,address_in: AddressUpdateIN, request: Request, d
       #  new_Address.country=address_in.country
        # new_Address.createdBy = userId
         new_Address.updatedBy = userId 
+        new_Address.updatedDate=func.now()
     try:
         db.commit()
         db.refresh(new_Address) 
@@ -124,8 +126,8 @@ def getAddresses(payload: dict,address_in: AddressGetIN, request: Request, db: S
         statusmessage="No Address Found" 
         )
     
-    if address_in.idaddress !="ALL":
-        address = db.query(Address).filter(Address.idaddress == address_in.idaddress).first()
+    if address_in.addressId !="ALL":
+        address = db.query(Address).filter(Address.addressId == address_in.addressId).first()
         tmp_AddressBase=AddressBase(
                 idaddress = address.idaddress, 
                 addressId=address.addressId,

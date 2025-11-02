@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.core.config import settings
 from app.db.db import get_db, engine
-from app.db.models import Base, Access
+from app.db.accessmodel import Access
+from app.db.models import Base
 from app.schemas.schemas import AccessBase, AccessGetIdIN, AccessGetIdTypeIN, AccessNewIN, AccessOut, AccessGetIN,AccessGetOUT
 
 
@@ -69,7 +70,7 @@ def revokeAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Ses
     )    
 
     tmp_count= db.query(func.count(Access.idaccess)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()
-    if tmp_count==0:
+    if not tmp_count or tmp_count==0:
         tmp_count=1
     else:
         tmp_count=tmp_count+1

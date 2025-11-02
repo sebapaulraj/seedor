@@ -10,7 +10,8 @@ from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.config import settings
 from app.db.db import get_db, engine
-from app.db.models import Base, Agreement, Profile
+from app.db.usermodel import Profile
+from app.db.models import Base, Agreement
 from app.schemas.schemas import AgreementBase, AgreementDeleteIN, AgreementNewIN, AgreementOut, AgreementGetIN,AgreementGetOUT,AgreementUpdateIN
 
 
@@ -28,7 +29,7 @@ def addAgreement(payload: dict,agreement_in: AgreementNewIN, request: Request, d
     )   
 
     tmp_count= db.query(func.count(Agreement.idUser)).filter(Agreement.idUser == userId).scalar()
-    if tmp_count==0:
+    if not tmp_count or tmp_count==0:
         tmp_count=1
 
     profile=db.query(Profile).filter(Profile.idprofile == profileId).first() 
@@ -116,7 +117,7 @@ def getAgreement(payload: dict,agreement_in: AgreementGetIN, request: Request, d
   
 
     if agreement_in.idagreement !="ALL" :
-        tmp_agreement = db.query(Agreement).filter(Agreement.idagreement == agreement_in.idagreement).first()
+        tmp_agreement = db.query(Agreement).filter(Agreement.agreementId == agreement_in.agreementId).first()
        
         agreement_listOut.listAgreement.append(tmp_agreement)
         agreement_listOut.statuscode="SUCCESS"

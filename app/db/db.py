@@ -12,7 +12,7 @@ def getconn():
     
         import pymysql
         return pymysql.connect(
-            host="127.0.0.1",
+            host=settings.DB_HOST,
             user=settings.DB_USER,
             password=settings.DB_PASS,
             database=settings.DB_NAME,

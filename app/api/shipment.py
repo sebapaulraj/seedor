@@ -3,13 +3,15 @@ import json
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.config import settings
 from app.db.db import get_db, engine
-from app.db.models import Base, Shipment
+from app.db.usermodel import Profile
+from app.db.models import Base,Shipment
 from app.schemas.schemas import ShipmentNewIN, ShipmentOut, ShipmentGetIN,ShipmentGetOUT,ShipmentUpdateIN
 
 
@@ -25,30 +27,40 @@ def addShipment(payload: dict,shipment_in: ShipmentNewIN, request: Request, db: 
         statuscode="ERROR",
         statusmessage="Invalid shipment Object"  
     )    
+
+    tmp_count= db.query(func.count(Shipment.idUser)).filter(Shipment.idUser == userId).scalar()
+    if not tmp_count or tmp_count==0:
+        tmp_count=1
+    else:
+        tmp_count=tmp_count+1
+
+    profile=db.query(Profile).filter(Profile.idprofile == profileId).first() 
+
+    tmp_seedorId=profile.seedorId
+    tmp_Code="SH"
     
     new_shipment=Shipment(
-        idshipment=userId,
-        label= shipment_in.label,
-        offerorSeedorId= shipment_in.offerorSeedorId,
-        signatorySeedorId= shipment_in.signatorySeedorId,
-        itemType= shipment_in.itemType,
-        itemId=shipment_in.itemId, 
-        status=shipment_in.status,
+        shipmentCode=tmp_seedorId+"/"+tmp_Code+"/"+str(tmp_count),
+        idUser=userId,
+        label="SHIPMENT",
+        shipperId= shipment_in.shipperId,
+        shipperName= shipment_in.shipperName,
+        description= shipment_in.description,
         isActive=True,
         createdBy = userId,
         updatedBy = userId    
     )
-       
     try:
+        db.add(new_shipment)
         db.commit()
         db.refresh(new_shipment) 
         response_data.idshipment=new_shipment.idshipment
         response_data.isActive=new_shipment.isActive
         response_data.statuscode="SUCCESS"
-        response_data.statusmessage="shipment Added Successfully"
+        response_data.statusmessage="Shipment Added Successfully"
     except IntegrityError as e:            
         db.rollback()
-        raise HTTPException(status_code=400, detail="Address update failed")        
+        raise HTTPException(status_code=400, detail="Shipment Added Failed")        
 
     return response_data
 
@@ -59,13 +71,13 @@ def updateShipment(payload: dict,shipment_in: ShipmentUpdateIN, request: Request
     email=payload["email"]    
     
     response_data=ShipmentOut(
-        idshipment=None,
-        isActive=None,
+        idshipment="",
+        isActive=False,
         statuscode="ERROR",
         statusmessage="Invalid shipment Object"  
         )
     
-    new_shipment=None
+ 
     if shipment_in.idshipment :
         new_shipment = db.query(Shipment).filter(Shipment.idshipment == shipment_in.idshipment).first()
    
@@ -88,30 +100,26 @@ def updateShipment(payload: dict,shipment_in: ShipmentUpdateIN, request: Request
 def getShipment(payload: dict,shipment_in: ShipmentGetIN, request: Request, db: Session = Depends(get_db)):
     userId=payload["userid"]
     profileId=payload["profileId"]
-    email=payload["email"]    
-    address_list=[]
-    address=None
+    email=payload["email"]   
+   
 
     shipment_listOut=ShipmentGetOUT(
-        idUser=None,
-        listAddress=None,
+        listShipment=[],
         statuscode="ERROR",
-        statusmessage="No Address Found" 
+        statusmessage="No Shipment Found" 
         )
 
-    if shipment_in.idaddress :
-        shipment = db.query(shipment).filter(shipment.idaddress == shipment_in.idaddress).first()
-        shipment_listOut.idUser=userId
-        shipment_listOut.listshipment.append(shipment)
+    if shipment_in.idshipment :
+        shipment = db.query(Shipment).filter(Shipment.shipmentCode == shipment_in.shipmentCode).first()
+        shipment_listOut.listShipment.append(shipment)
         statuscode="SUCCESS"
-        statusmessage="Address Found" 
+        statusmessage="Shipment Found" 
     else:
-        shipment_list=db.query(shipment).filter(shipment.idUser == userId).all()
-        shipment_listOut.idUser=userId
+        shipment_list=db.query(Shipment).filter(Shipment.idUser == userId).all()        
         for tmpshipment in shipment_list:            
             shipment_listOut.listshipment.append(tmpshipment)
-        statuscode="SUCCESS"
-        statusmessage="Address Found" 
+        shipment_listOut.statuscode="SUCCESS"
+        shipment_listOut.statusmessage="Shipment Found" 
 
     response_data=shipment_listOut
 

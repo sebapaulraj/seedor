@@ -18,23 +18,26 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
     email=payload["email"]    
     
     response_data=ShipmenttrackingOut(
-        idshipmenttracking=None,
-        shipmenttrackingStatus=None,
+        idshipmenttracking="",
+        shipmenttrackingStatus="",
         statuscode="ERROR",
         statusmessage="Invalid Shipmenttracking Object"  
     )    
     
     new_Shipmenttracking=Shipmenttracking(
-        idUser=userId,
-        shipmenttrackingTypeId=shipmenttracking_in.shipmenttrackingTypeId,
-        shipmenttrackingTypeValue=shipmenttracking_in.shipmenttrackingTypeValue,  
-        itemType=shipmenttracking_in.itemType,  
-        shipmenttrackingStatus=shipmenttracking_in.shipmenttrackingStatus,
+        idshipment=shipmenttracking_in.idshipment,
+        shipmentCode=shipmenttracking_in.shipmentCode,
+        shipmentTransitCode=shipmenttracking_in.shipmentTransitCode,
+        shipmentTransitTitle=shipmenttracking_in.shipmentTransitTitle,
+        shipmenttrackingcontent=shipmenttracking_in.shipmenttrackingcontent,
+        shipmentTransitDetail=shipmenttracking_in.shipmentTransitDetail,
+        isActive=True,
         createdBy = userId,
         updatedBy = userId    
     )
        
     try:
+        db.add(new_Shipmenttracking)
         db.commit()
         db.refresh(new_Shipmenttracking) 
         response_data.idshipmenttracking=new_Shipmenttracking.idshipmenttracking

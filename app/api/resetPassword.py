@@ -9,7 +9,9 @@ from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.config import settings
 from app.db.db import get_db, engine
-from app.db.models import Base, User,Profile,Lov
+from app.db.usermodel import User,Profile
+from app.db.mastermodel import Lov
+from app.db.models import Base
 from app.schemas.schemas import EmailOut
 from app.api.auth import hash_password, create_access_token, verify_password,verify_access_token,get_bearer_token,manual_basic_auth,verify_basic_auth
 from app.core.rate_limit import check_rate_limit

@@ -9,7 +9,8 @@ from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.config import settings
 from app.db.db import get_db, engine
-from app.db.models import Base, User,Profile
+from app.db.usermodel import User,Profile
+from app.db.models import Base 
 from app.schemas.schemas import UserCreate, UserOut,LoginUser,LoginOut,UserName,UserNameOut
 from app.api.auth import hash_password, verify_password
 
