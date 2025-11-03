@@ -30,7 +30,7 @@ def addAddress(payload: dict,address_in: AddressNewIN, request: Request, db: Ses
         addressId="",
         isActive=False,
         statuscode="ERROR",
-        statusmessage="Invalid User Profile"  
+        statusmessage="Invalid Address Profile"  
     )   
     
     tmp_count= db.query(func.count(Address.idaddress)).filter(Address.idUser == userId).scalar()
@@ -113,7 +113,7 @@ def updateAddress(payload: dict,address_in: AddressUpdateIN, request: Request, d
 
     return response_data
 
-def getAddresses(payload: dict,address_in: AddressGetIN, request: Request, db: Session = Depends(get_db)):
+def getAddressesId(payload: dict,address_in: AddressGetIN, request: Request, db: Session = Depends(get_db)):
     userId=payload["userid"]
     profileId=payload["profileId"]
     email=payload["email"]    
@@ -126,41 +126,62 @@ def getAddresses(payload: dict,address_in: AddressGetIN, request: Request, db: S
         statusmessage="No Address Found" 
         )
     
-    if address_in.addressId !="ALL":
-        address = db.query(Address).filter(Address.addressId == address_in.addressId).first()
+    address = db.query(Address).filter(Address.addressId == address_in.addressId).first()
+    if not address :
+         raise HTTPException(status_code=400, detail="Address Update Failed")  
+    
+    tmp_AddressBase=AddressBase(
+            idaddress = address.idaddress, 
+            addressId=address.addressId,
+            isActive= address.isActive,
+            label= address.label,
+            primaryAddress= address.primaryAddress,
+            street=address.street,
+            area=address.area,
+            city=address.city,
+            postalCode=address.postalCode,
+            country=address.country
+        )  
+    address_listOut.listAddress.append(tmp_AddressBase)
+    address_listOut.statuscode="SUCCESS"
+    address_listOut.statusmessage="Address Found" 
+    
+    response_data=address_listOut
+
+    return response_data
+
+
+def getAddressesAll(payload: dict, request: Request, db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+    address_list=[]
+    address=None
+
+    address_listOut=AddressGetOUT(
+        listAddress=[],
+        statuscode="ERROR",
+        statusmessage="No Address Found" 
+        )
+    
+    address_list=db.query(Address).filter(Address.idUser == userId).all()        
+    for tmpAddress in address_list:
         tmp_AddressBase=AddressBase(
-                idaddress = address.idaddress, 
-                addressId=address.addressId,
-                isActive= address.isActive,
-                label= address.label,
-                primaryAddress= address.primaryAddress,
-                street=address.street,
-                area=address.area,
-                city=address.city,
-                postalCode=address.postalCode,
-                country=address.country
-            )  
+            idaddress = tmpAddress.idaddress, 
+            addressId=tmpAddress.addressId,
+            isActive= tmpAddress.isActive,
+            label= tmpAddress.label,
+            primaryAddress= tmpAddress.primaryAddress,
+            street=tmpAddress.street,
+            area=tmpAddress.area,
+            city=tmpAddress.city,
+            postalCode=tmpAddress.postalCode,
+            country=tmpAddress.country
+        )            
         address_listOut.listAddress.append(tmp_AddressBase)
-        address_listOut.statuscode="SUCCESS"
-        address_listOut.statusmessage="Address Found" 
-    else:
-        address_list=db.query(Address).filter(Address.idUser == userId).all()        
-        for tmpAddress in address_list:
-            tmp_AddressBase=AddressBase(
-                idaddress = tmpAddress.idaddress, 
-                addressId=tmpAddress.addressId,
-                isActive= tmpAddress.isActive,
-                label= tmpAddress.label,
-                primaryAddress= tmpAddress.primaryAddress,
-                street=tmpAddress.street,
-                area=tmpAddress.area,
-                city=tmpAddress.city,
-                postalCode=tmpAddress.postalCode,
-                country=tmpAddress.country
-            )            
-            address_listOut.listAddress.append(tmp_AddressBase)
-        address_listOut.statuscode="SUCCESS"
-        address_listOut.statusmessage="Address Found" 
+
+    address_listOut.statuscode="SUCCESS"
+    address_listOut.statusmessage="Address Found" 
 
     response_data=address_listOut
 
@@ -191,7 +212,7 @@ def deleteAddress(payload: dict,address_in: AddressDeleteIN, request: Request, d
        # new_Address.city=address_in.city
        # new_Address.stateorProvince=address_in.stateorProvince 
        # new_Address.postalCode=address_in.postalCode
-      #  new_Address.country=address_in.country
+       # new_Address.country=address_in.country
        # new_Address.createdBy = userId
         new_Address.updatedBy = userId 
     try:

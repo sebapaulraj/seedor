@@ -9,24 +9,24 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.api.access import getAccessById, getHistoryAccess, getTypeIdAccess,grandAccess, revokeAccess
-from app.api.address import addAddress, deleteAddress, getAddresses, updateAddress
-from app.api.agreement import addAgreement, deleteAgreement, getAgreement, updateAgreement
+from app.api.access import getAccessById, getHistoryAccess, getHistoryAccessAll, getTypeIdAccess,grandAccess, revokeAccess
+from app.api.address import addAddress, deleteAddress,getAddressesAll, getAddressesId, updateAddress
+from app.api.agreement import addAgreement, deleteAgreement,getAgreementAll, getAgreementId, updateAgreement
 from app.core.config import settings
-from app.api.consent import acceptConsentOffer, acceptConsentRequest, createConsentOffer, createConsentRequest, getConsentOfferd, getConsentSigned, rejectConsentOffer, rejectConsentRequest
+from app.api.consent import acceptConsentOffer, acceptConsentRequest, createConsentOffer, createConsentRequest,  getConsentOfferdAll, getConsentOfferdId,  getConsentSignedAll, getConsentSignedId, rejectConsentOffer, rejectConsentRequest
 from app.db.db import get_db, engine
 from app.db.usermodel import User,Profile
 from app.db.mastermodel import Lov
 from app.db.models import Base
-from app.schemas.consentschema import ConsentOut, ConsentRequestNewIN, ConsentRequestOut, ConsentUpdateIN
-from app.schemas.schemas import AccessGetIdIN, AccessGetIdTypeIN, AccessNewIN, AccessOut, AddressDeleteIN, AddressGetIN, AddressGetOUT, AddressNewIN, AddressOut, AddressUpdateIN, AgreementDeleteIN, AgreementGetIN, AgreementNewIN, AgreementOut, AgreementUpdateIN,ShipmentNewIN, ShipmentOut, ShipmentUpdateIN, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingUpdateIN, UserCreate, UserOut,LoginUser,LoginOut,LovOut,LovIn,UserName,UserNameOut,UserProfile,UserProfileOut,ValidateSeedorId,ValidateSeedorIdOut
+from app.schemas.consentschema import ConsentGetIN, ConsentGetOUT, ConsentRequestNewIN, ConsentRequestOut, ConsentUpdateIN
+from app.schemas.schemas import AccessGetIdIN, AccessGetIdTypeIN, AccessNewIN, AccessOut, AddressDeleteIN, AddressGetIN, AddressGetOUT, AddressNewIN, AddressOut, AddressUpdateIN, AgreementDeleteIN, AgreementGetIN, AgreementNewIN, AgreementOut, AgreementUpdateIN,ShipmentNewIN, ShipmentOut, ShipmentUpdateIN, ShipmenttrackingGetIN, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingUpdateIN, UserCreate, UserOut,LoginUser,LoginOut,LovOut,LovIn,UserName,UserNameOut,UserProfile,UserProfileOut,ValidateSeedorId,ValidateSeedorIdOut
 from app.api.auth import create_access_token,verify_access_token,get_bearer_token,manual_basic_auth,verify_basic_auth
 from app.core.rate_limit import check_rate_limit
 from email_validator import validate_email, EmailNotValidError
 from app.core.email_security import send_verification_email
 from app.utils.emailauth_utils import create_email_token, verify_email_token
 from app.api.shipment import addShipment, getShipment, updateShipment
-from app.api.shipmenttracking import addShipmenttracking, getShipmenttracking, updateShipmenttracking
+from app.api.shipmenttracking import addShipmenttracking, getShipmenttracking, getShipmenttrackingAll, updateShipmenttracking
 from app.api.user import registerUser,validateUserName,validateLogin
 from app.api.master import getLov
 from app.api.userprofile import updateProfile,validateSeedorId
@@ -35,7 +35,7 @@ from app.api.resetPassword import sendPasswordRestEmail
 # Create DB tables (run once or via migrations in prod — Alembic recommended)
 #Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Secure Register API")
+app = FastAPI(title="Seedor Information Seeding API")
 active_connections = {}
 # CORS - restrict origins in production
 app.add_middleware(
@@ -183,7 +183,7 @@ async def accessRevoke(access_in: AccessNewIN, request: Request, db: Session = D
     return response
 
 
-@app.get("/seedor/1.0/access/getId", response_model=AccessOut, status_code=201)
+@app.get("/seedor/1.0/access/id", response_model=AccessOut, status_code=201)
 async def accessGetId(access_in: AccessGetIdIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -194,7 +194,7 @@ async def accessGetId(access_in: AccessGetIdIN, request: Request, db: Session = 
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.get("/seedor/1.0/access/getTypeId", response_model=AccessOut, status_code=201)
+@app.get("/seedor/1.0/access/type", response_model=AccessOut, status_code=201)
 async def accessGetTypeId(access_in: AccessGetIdTypeIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -215,6 +215,19 @@ async def accessGetHistory(access_in: AccessGetIdTypeIN, request: Request, db: S
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
     return response
+
+@app.get("/seedor/1.0/access", response_model=AccessOut, status_code=201)
+async def accessGetHistoryAll(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getHistoryAccessAll(payload,request, db)
+    response = JSONResponse(status_code=200, content=response_data.dict())
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+
 
 #------- access block ends -------------
 
@@ -242,18 +255,29 @@ async def addressUpdate(address_in: AddressUpdateIN, request: Request, db: Sessi
     return response
 
 
-@app.get("/seedor/1.0/address", response_model=AddressGetOUT, status_code=201)
+@app.get("/seedor/1.0/address/id", response_model=AddressGetOUT, status_code=201)
 async def addressesGet(address_in: AddressGetIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
     payload=verify_access_token(token)
-    response_data=getAddresses(payload,address_in, request, db)
+    response_data=getAddressesId(payload,address_in, request, db)
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.delete("/seedor/1.0/address", response_model=AddressDeleteIN, status_code=201)
+@app.get("/seedor/1.0/address", response_model=AddressGetOUT, status_code=201)
+async def addressesGet(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getAddressesAll(payload,request, db)
+    response = JSONResponse(status_code=200, content=response_data.dict())
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.delete("/seedor/1.0/address/id", response_model=AddressDeleteIN, status_code=201)
 async def addressDelete(address_in: AddressGetIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -291,18 +315,29 @@ async def agreementUpdate(agreement_in: AgreementUpdateIN, request: Request, db:
     return response
 
 
-@app.get("/seedor/1.0/agreement", response_model=AgreementOut, status_code=201)
+@app.get("/seedor/1.0/agreement/id", response_model=AgreementOut, status_code=201)
 async def agreementGet(agreement_in: AgreementGetIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
     payload=verify_access_token(token)
-    response_data=getAgreement(payload,agreement_in, request, db)
+    response_data=getAgreementId(payload,agreement_in, request, db)
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.delete("/seedor/1.0/agreement", response_model=AgreementOut, status_code=201)
+@app.get("/seedor/1.0/agreement", response_model=AgreementOut, status_code=201)
+async def agreementGet(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getAgreementAll(payload, request, db)
+    response = JSONResponse(status_code=200, content=response_data.dict())
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.delete("/seedor/1.0/agreement/id", response_model=AgreementOut, status_code=201)
 async def agreementDelete(address_in: AgreementDeleteIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -323,9 +358,9 @@ async def consentRequestCreate(consent_in: ConsentRequestNewIN, request: Request
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=createConsentRequest(payload,consent_in, request, db)
-    signatory_id = response_data.signatoryIdUser
-    if signatory_id in active_connections:
-        await active_connections[response_data.signatoryIdUser].send_json({"msg":response_data.dict()})
+    itemOwner_id = response_data.itemOwnerIdUser
+    if itemOwner_id in active_connections:
+        await active_connections[response_data.itemOwnerIdUser].send_json({"msg":response_data.dict()})
         response_data.isactiveConnection=True
         response_data.consentSendStatus="Consent Requested"
     
@@ -340,9 +375,9 @@ async def consentRequestOffer(consent_in: ConsentRequestNewIN, request: Request,
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=createConsentOffer(payload,consent_in, request, db)
-    signatory_id = response_data.signatoryIdUser
-    if signatory_id in active_connections:
-        await active_connections[response_data.signatoryIdUser].send_json({"msg":response_data.dict()})
+    itemBeneficiary_id = response_data.itemBeneficiaryIdUser
+    if itemBeneficiary_id in active_connections:
+        await active_connections[response_data.itemBeneficiaryIdUser].send_json({"msg":response_data.dict()})
         response_data.isactiveConnection=True
         response_data.consentSendStatus="Consent Requested"
     
@@ -350,7 +385,7 @@ async def consentRequestOffer(consent_in: ConsentRequestNewIN, request: Request,
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.put("/seedor/1.0/consent/acceptrequest", response_model=ConsentRequestOut, status_code=201)
+@app.put("/seedor/1.0/consent/request", response_model=ConsentRequestOut, status_code=201)
 async def consentRequestAcceptRequest(consent_in: ConsentRequestNewIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -361,7 +396,7 @@ async def consentRequestAcceptRequest(consent_in: ConsentRequestNewIN, request: 
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.put("/seedor/1.0/consent/acceptoffer", response_model=ConsentRequestOut, status_code=201)
+@app.put("/seedor/1.0/consent/offer", response_model=ConsentRequestOut, status_code=201)
 async def consentRequestAcceptOffer(consent_in: ConsentRequestNewIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -373,8 +408,8 @@ async def consentRequestAcceptOffer(consent_in: ConsentRequestNewIN, request: Re
     return response
 
 
-@app.delete("/seedor/1.0/consent/rejectrequest", response_model=ConsentOut, status_code=201)
-async def consentRejectRequestReject(consent_in: ConsentUpdateIN, request: Request, db: Session = Depends(get_db)):
+@app.delete("/seedor/1.0/consent/request", response_model=ConsentRequestOut, status_code=201)
+async def consentRejectRequestReject(consent_in: ConsentRequestNewIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
@@ -384,8 +419,8 @@ async def consentRejectRequestReject(consent_in: ConsentUpdateIN, request: Reque
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.delete("/seedor/1.0/consent/rejectoffer", response_model=ConsentOut, status_code=201)
-async def consentRejectRequestOffer(consent_in: ConsentUpdateIN, request: Request, db: Session = Depends(get_db)):
+@app.delete("/seedor/1.0/consent/offer", response_model=ConsentRequestOut, status_code=201)
+async def consentRejectRequestOffer(consent_in: ConsentRequestNewIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
@@ -396,31 +431,53 @@ async def consentRejectRequestOffer(consent_in: ConsentUpdateIN, request: Reques
     return response
 
 
-@app.get("/seedor/1.0/consent/offered", response_model=ConsentOut, status_code=201)
-async def consentGet(consent_in: ConsentUpdateIN, request: Request, db: Session = Depends(get_db)):
+@app.get("/seedor/1.0/consent/offered/id", response_model=ConsentRequestOut, status_code=201)
+async def consentGetOfferedId(consent_in: ConsentGetIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
     payload=verify_access_token(token)
-    response_data=getConsentOfferd(payload,consent_in, request, db)
+    response_data=getConsentOfferdId(payload,consent_in, request, db)
     response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.get("/seedor/1.0/consent/signed", response_model=ConsentOut, status_code=201)
-async def consentGet(consent_in: ConsentUpdateIN, request: Request, db: Session = Depends(get_db)):
+@app.get("/seedor/1.0/consent/offered", response_model=ConsentGetOUT, status_code=201)
+async def consentGetOfferdAll(request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
     payload=verify_access_token(token)
-    response_data=getConsentSigned(payload,consent_in, request, db)
+    response_data=getConsentOfferdAll(payload,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/consent/signed/id", response_model=ConsentRequestOut, status_code=201)
+async def consentGetSignedId(consent_in: ConsentGetIN, request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getConsentSignedId(payload,consent_in, request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/consent/signed", response_model=ConsentGetOUT, status_code=201)
+async def consentGetSignedAll(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getConsentSignedAll(payload,request, db)
     response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
 #------- consent block ends -------------
 
-
+'''
 #------- shipment block started -------------
 @app.post("/seedor/1.0/shipment/add", response_model=ShipmentOut, status_code=201)
 async def shipmentAdd(shipment_in: ShipmentNewIN, request: Request, db: Session = Depends(get_db)):
@@ -458,10 +515,10 @@ async def shipmentGet(shipment_in: ShipmentUpdateIN, request: Request, db: Sessi
 
 #------- shipment block ends -------------
 
-
+'''
 
 #------- shipmenttracking block started -------------
-@app.post("/seedor/1.0/shipmenttracking/add", response_model=ShipmenttrackingOut, status_code=201)
+@app.post("/seedor/1.0/shipment/add", response_model=ShipmenttrackingOut, status_code=201)
 async def shipmenttrackingAdd(shipmenttracking_in: ShipmenttrackingNewIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -472,7 +529,7 @@ async def shipmenttrackingAdd(shipmenttracking_in: ShipmenttrackingNewIN, reques
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.put("/seedor/1.0/shipmenttracking/update", response_model=ShipmenttrackingOut, status_code=201)
+@app.put("/seedor/1.0/shipment/update", response_model=ShipmenttrackingOut, status_code=201)
 async def shipmenttrackingUpdate(shipmenttracking_in: ShipmenttrackingUpdateIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -484,8 +541,8 @@ async def shipmenttrackingUpdate(shipmenttracking_in: ShipmenttrackingUpdateIN, 
     return response
 
 
-@app.get("/seedor/1.0/shipmenttracking", response_model=ShipmenttrackingOut, status_code=201)
-async def shipmenttrackingGet(shipmenttracking_in: ShipmenttrackingUpdateIN, request: Request, db: Session = Depends(get_db)):
+@app.get("/seedor/1.0/shipment/code", response_model=ShipmenttrackingOut, status_code=201)
+async def shipmenttrackingGet(shipmenttracking_in: ShipmenttrackingGetIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
@@ -494,6 +551,18 @@ async def shipmenttrackingGet(shipmenttracking_in: ShipmenttrackingUpdateIN, req
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
     return response
+
+@app.get("/seedor/1.0/shipment/items", response_model=ShipmenttrackingOut, status_code=201)
+async def shipmenttrackingGetAll(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getShipmenttrackingAll(payload,request, db)
+    response = JSONResponse(status_code=200, content=response_data.dict())
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
 
 #------- shipmenttracking block ends -------------
 

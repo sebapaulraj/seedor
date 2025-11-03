@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.core.config import settings
 from app.db.db import get_db, engine
-from app.db.models import Base, Shipmenttracking
-from app.schemas.schemas import ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingGetIN,ShipmenttrackingGetOUT,ShipmenttrackingUpdateIN
+from app.db.shipmentmodel import Shipment, Shipmenttracking
+from app.db.models import Base
+from app.schemas.schemas import ShipmentGetOUT, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingGetIN,ShipmenttrackingGetOUT,ShipmenttrackingUpdateIN
 
 
 def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN, request: Request, db: Session = Depends(get_db)):
@@ -19,34 +20,37 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
     
     response_data=ShipmenttrackingOut(
         idshipmenttracking="",
-        shipmenttrackingStatus="",
+        shipmentCode="",
+        isActive=False,
         statuscode="ERROR",
-        statusmessage="Invalid Shipmenttracking Object"  
+        statusmessage="Invalid Shipment Tracking Object"  
     )    
     
     new_Shipmenttracking=Shipmenttracking(
-        idshipment=shipmenttracking_in.idshipment,
-        shipmentCode=shipmenttracking_in.shipmentCode,
+        idUserSeedorId=shipmenttracking_in.userSeedorid, 
+        idstatusUser=userId,
         shipmentTransitCode=shipmenttracking_in.shipmentTransitCode,
-        shipmentTransitTitle=shipmenttracking_in.shipmentTransitTitle,
+        shipmentTransitTitle=shipmenttracking_in.shipmentTransitTitle,        
         shipmenttrackingcontent=shipmenttracking_in.shipmenttrackingcontent,
+        shipmentTransitSummary=shipmenttracking_in.shipmentTransitSummary,
         shipmentTransitDetail=shipmenttracking_in.shipmentTransitDetail,
         isActive=True,
         createdBy = userId,
         updatedBy = userId    
     )
-       
+          
     try:
         db.add(new_Shipmenttracking)
         db.commit()
         db.refresh(new_Shipmenttracking) 
         response_data.idshipmenttracking=new_Shipmenttracking.idshipmenttracking
-        response_data.shipmenttrackingStatus=new_Shipmenttracking.shipmenttrackingStatus
+        response_data.shipmentCode=new_Shipmenttracking.shipmentCode
+        response_data.isActive=new_Shipmenttracking.isActive       
         response_data.statuscode="SUCCESS"
-        response_data.statusmessage="Shipmenttracking Added Successfully"
+        response_data.statusmessage="Shipment Tracking Added Successfully"
     except IntegrityError as e:            
         db.rollback()
-        raise HTTPException(status_code=400, detail="Address update failed")        
+        raise HTTPException(status_code=400, detail="Addition Of Shipment Tracking update failed")        
 
     return response_data
 
@@ -57,29 +61,38 @@ def updateShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingUp
     email=payload["email"]    
     
     response_data=ShipmenttrackingOut(
-        idshipmenttracking=None,
-        shipmenttrackingStatus=None,
+        idshipmenttracking="",
+        shipmentCode="",
+        isActive=False,
         statuscode="ERROR",
-        statusmessage="Invalid Shipmenttracking Object"  
-        )
+        statusmessage="Invalid Shipment Tracking Object"  
+    )    
     
-    new_Shipmenttracking=None
-    if shipmenttracking_in.idshipmenttracking :
-        new_Shipmenttracking = db.query(Shipmenttracking).filter(Shipmenttracking.idshipmenttracking == shipmenttracking_in.idaddress).first()
-   
-    new_Shipmenttracking.shipmenttrackingStatus=shipmenttracking_in.shipmenttrackingStatus,
-    new_Shipmenttracking.createdBy = userId,
-    new_Shipmenttracking.updatedBy = userId    
+    new_Shipmenttracking=Shipmenttracking(       
+        idUserSeedorId=shipmenttracking_in.userSeedorid, 
+        idstatusUser=userId,
+        shipmentCode=shipmenttracking_in.shipmentCode,
+        shipmentTransitCode=shipmenttracking_in.shipmentTransitCode,
+        shipmentTransitTitle=shipmenttracking_in.shipmentTransitTitle,        
+        shipmenttrackingcontent=shipmenttracking_in.shipmenttrackingcontent,
+        shipmentTransitSummary=shipmenttracking_in.shipmentTransitSummary,
+        shipmentTransitDetail=shipmenttracking_in.shipmentTransitDetail,
+        isActive=True,
+        createdBy = userId,
+        updatedBy = userId    
+    )  
     try:
+        db.add(new_Shipmenttracking)
         db.commit()
         db.refresh(new_Shipmenttracking) 
         response_data.idshipmenttracking=new_Shipmenttracking.idshipmenttracking
-        response_data.shipmenttrackingStatus=new_Shipmenttracking.shipmenttrackingStatus
+        response_data.shipmentCode=new_Shipmenttracking.shipmentCode
+        response_data.isActive=new_Shipmenttracking.isActive       
         response_data.statuscode="SUCCESS"
-        response_data.statusmessage="Shipmenttracking Updated Successfully"
+        response_data.statusmessage="Shipment Tracking Updated Successfully"
     except IntegrityError as e:            
         db.rollback()
-        raise HTTPException(status_code=400, detail="Shipmenttracking Update Failed")        
+        raise HTTPException(status_code=400, detail="Shipment Tracking Update Failed")        
 
     return response_data
 
@@ -91,26 +104,45 @@ def getShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingGetIN
     address=None
 
     shipmenttracking_listOut=ShipmenttrackingGetOUT(
-        idUser=None,
-        listAddress=None,
+        shipmentCode="",
+        listShipmenttracking=[],   
         statuscode="ERROR",
-        statusmessage="No Address Found" 
+        statusmessage="No Shipment Tracking Found" 
         )
 
-    if shipmenttracking_in.idaddress :
-        shipmenttracking = db.query(Shipmenttracking).filter(Shipmenttracking.idaddress == shipmenttracking_in.idaddress).first()
-        shipmenttracking_listOut.idUser=userId
-        shipmenttracking_listOut.listShipmenttracking.append(shipmenttracking)
-        statuscode="SUCCESS"
-        statusmessage="Address Found" 
-    else:
-        shipmenttracking_list=db.query(Shipmenttracking).filter(Shipmenttracking.idUser == userId).all()
-        shipmenttracking_listOut.idUser=userId
+    if shipmenttracking_in.shipmentCode :
+        shipmenttracking_list=db.query(Shipmenttracking).filter(Shipmenttracking.shipmentCode == shipmenttracking_in.shipmentCode).all()
+        shipmenttracking_listOut.shipmentCode =shipmenttracking_in.shipmentCode
         for tmpShipmenttracking in shipmenttracking_list:            
             shipmenttracking_listOut.listShipmenttracking.append(tmpShipmenttracking)
-        statuscode="SUCCESS"
-        statusmessage="Address Found" 
+        shipmenttracking_listOut.statuscode="SUCCESS"
+        shipmenttracking_listOut.statusmessage="Shipment Tracking Found" 
 
     response_data=shipmenttracking_listOut
 
     return response_data
+
+
+def getShipmenttrackingAll(payload: dict,request: Request, db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+    address_list=[]
+    address=None
+
+    shipment_listOut=ShipmentGetOUT(
+        listShipment=[],
+        statuscode="ERROR",
+        statusmessage="No Shipment Tracking Found" 
+        )
+
+    shipmenttracking_list=db.query(Shipment).filter(Shipment.idUser == userId).all()
+    for tmp_Shipment in shipmenttracking_list:            
+        shipment_listOut.listShipment.append(tmp_Shipment)
+    shipment_listOut.statuscode="SUCCESS"
+    shipment_listOut.statusmessage="Shipment Tracking Found" 
+
+    response_data=shipment_listOut
+
+    return response_data
+

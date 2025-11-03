@@ -10,32 +10,35 @@ base_model_config = ConfigDict(
 
 #---------- ConsentRequest New -------------#
 class ConsentModel(BaseModel):
-    offerorIdUser:str  
-    signatoryIdUser:str
-    offerorSeedorId:str
-    signatorySeedorId:str
+    itemOwnerIdUser:str  
+    itemBeneficiaryIdUser:str
+    itemOwnerSeedorId:str
+    itemBeneficiarySeedorId:str
     itemType:str
     itemId:str   
     status:str 
-    grantedOn:str
-    revokedOn:str
+    grantedOn: Optional[str] = None
+    revokedOn: Optional[str] = None
+    validUntil: Optional[str] = None
+    
    
 class ConsentRequestNewIN(BaseModel):
-    offerorSeedorId : str 
-    signatorySeedorId : str 
+    itemOwnerSeedorId : str 
+    itemBeneficiarySeedorId : str 
     itemType: str
     itemId:str
 
 class ConsentRequestOut(BaseModel):
     idconsentrequest:str
-    offerorIdUser:str  
-    signatoryIdUser:str
+    itemOwnerIdUser:str  
+    itemBeneficiaryIdUser:str
     itemType: str
     itemId:str
     status:str
+    requestedBy:str
+    requestedTo:str
     isactiveConnection:bool
-    consentSendStatus:str
-    updatedDate:str   
+    consentSendStatus:str   
     statuscode:str
     statusmessage:str 
    
@@ -45,8 +48,8 @@ class ConsentRequestOut(BaseModel):
 #---------- Consent -------------#
 
 class ConsentNewIN(BaseModel):
-    offerorSeedorId : str 
-    signatorySeedorId : str 
+    itemOwnerSeedorId : str 
+    itemBeneficiarySeedorId : str 
     itemType: str
     itemId:str
     status:str    
@@ -54,9 +57,9 @@ class ConsentNewIN(BaseModel):
 
 class ConsentOut(BaseModel):
     idconsentrequest:str
-    offerorIdUser:str  
-    signatoryIdUser:str
-    isActive:bool
+    itemOwnerSeedorId : str 
+    itemBeneficiarySeedorId : str 
+    isActive:bool    
     statuscode:str
     statusmessage:str 
 
@@ -66,7 +69,7 @@ class ConsentUpdateIN(BaseModel):
     isActive:str
     
 class ConsentGetIN(BaseModel):
-    idconsent:str
+    itemId:str
    
 class ConsentGetOUT(BaseModel):   
     listConsent:List[ConsentModel]

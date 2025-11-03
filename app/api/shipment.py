@@ -11,7 +11,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.config import settings
 from app.db.db import get_db, engine
 from app.db.usermodel import Profile
-from app.db.models import Base,Shipment
+from app.db.shipmentmodel import Shipment
+from app.db.models import Base
 from app.schemas.schemas import ShipmentNewIN, ShipmentOut, ShipmentGetIN,ShipmentGetOUT,ShipmentUpdateIN
 
 

@@ -1,7 +1,8 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, constr
 from typing import List, Optional
 from app.db.accessmodel import Access
-from app.db.models import Agreement,Shipment,Shipmenttracking
+from app.db.agreementmodel import Agreement
+from app.db.shipmentmodel import Shipment,Shipmenttracking
 from app.db.addressmodel import Address
 
 base_model_config = ConfigDict(
@@ -204,7 +205,6 @@ class AccessGetIN(BaseModel):
     idaccess:str
    
 class AccessGetOUT(BaseModel):
-    idaccess:str
     listAccess:List[AccessBase]
     statuscode:str
     statusmessage:str
@@ -299,7 +299,7 @@ class ShipmentGetOUT(BaseModel):
 #----------Shipment Tracking-------------#
 
 class ShipmenttrackingBase(BaseModel):
-    idshipment:str  
+    idshipmenttracking:str  
     idUserSeedorId:str 
     shipmentCode :str
     shipmentTransitCode:str
@@ -308,34 +308,40 @@ class ShipmenttrackingBase(BaseModel):
     shipmentTransitSummary:str
     shipmentTransitDetail:str
     isActive:bool
+    seqNumber:int
       
 
-class ShipmenttrackingNewIN(BaseModel):
-    idshipment : str
-    idstatusUser: str 
-    shipmentCode : str 
+class ShipmenttrackingNewIN(BaseModel):   
+    userSeedorid : str 
     shipmentTransitCode : str 
     shipmentTransitTitle: str
     shipmenttrackingcontent: str
     shipmentTransitSummary: str
     shipmentTransitDetail: str
-    isActive:bool    
+        
 
 class ShipmenttrackingOut(BaseModel):
     idshipmenttracking:str
+    shipmentCode:str
     isActive:bool
     statuscode:str
     statusmessage:str 
 
 class ShipmenttrackingUpdateIN(BaseModel):
-    idshipmenttracking:str
+    shipmentCode:str
+    userSeedorid : str 
+    shipmentTransitCode : str 
+    shipmentTransitTitle: str
+    shipmenttrackingcontent: str
+    shipmentTransitSummary: str
+    shipmentTransitDetail: str
     isActive:str
     
 class ShipmenttrackingGetIN(BaseModel):
-    idshipmenttracking:str
+    shipmentCode:str
    
 class ShipmenttrackingGetOUT(BaseModel):
-    idshipmenttracking:str
+    shipmentCode:str
     listShipmenttracking:List[ShipmenttrackingBase]
     statuscode:str
     statusmessage:str

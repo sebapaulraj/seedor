@@ -22,6 +22,7 @@ def grandAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Sess
     response_data=AccessOut(
         idaccess="",
         accessStatus="",
+        seqCounter=0,
         statuscode="ERROR",
         statusmessage="Invalid Access Object"  
     )    
@@ -52,7 +53,7 @@ def grandAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Sess
         response_data.statusmessage="Access Added Successfully"
     except IntegrityError as e:            
         db.rollback()
-        raise HTTPException(status_code=400, detail="Address update failed")        
+        raise HTTPException(status_code=400, detail="Access update failed")        
 
     return response_data
 
@@ -65,13 +66,14 @@ def revokeAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Ses
     response_data=AccessOut(
         idaccess="",
         accessStatus="",
+        seqCounter=0,
         statuscode="ERROR",
         statusmessage="Invalid Access Object"  
     )    
 
     tmp_count= db.query(func.count(Access.idaccess)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()
     if not tmp_count or tmp_count==0:
-        tmp_count=1
+        raise HTTPException(status_code=400, detail="No Access Grand to Revoke")          
     else:
         tmp_count=tmp_count+1
     
@@ -91,11 +93,12 @@ def revokeAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Ses
         db.refresh(new_Access) 
         response_data.idaccess=new_Access.idaccess
         response_data.accessStatus=new_Access.accessStatus
+        response_data.seqCounter=new_Access.seqCounter
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Access Added Successfully"
     except IntegrityError as e:            
         db.rollback()
-        raise HTTPException(status_code=400, detail="Address update failed")        
+        raise HTTPException(status_code=400, detail="Access update failed")        
 
     return response_data
 
@@ -108,7 +111,6 @@ def getAccessById(payload: dict,access_in: AccessGetIdIN, request: Request, db: 
     address=None
 
     access_listOut=AccessGetOUT(
-        idaccess="",
         listAccess=[],
         statuscode="ERROR",
         statusmessage="No Access Detail" 
@@ -127,9 +129,8 @@ def getAccessById(payload: dict,access_in: AccessGetIdIN, request: Request, db: 
             seqCounter=tmp_access.seqCounter
         )
         access_listOut.listAccess.append(tmp_AccessBase)
-        access_listOut.listAccess.append(tmp_AccessBase)
         access_listOut.statuscode="SUCCESS"
-        access_listOut.statusmessage="Address Found" 
+        access_listOut.statusmessage="Access Found" 
     
     response_data=access_listOut
 
@@ -164,7 +165,7 @@ def getTypeIdAccess(payload: dict,access_in: AccessGetIdTypeIN, request: Request
         )
         access_listOut.listAccess.append(tmp_AccessBase)       
         access_listOut.statuscode="SUCCESS"
-        access_listOut.statusmessage="Address Found" 
+        access_listOut.statusmessage="Access Found" 
     
     response_data=access_listOut
 
@@ -187,8 +188,8 @@ def getHistoryAccess(payload: dict,access_in: AccessGetIdTypeIN, request: Reques
         )
     
     if access_in.accessTypeId :
-        tmp_seq= db.query(func.max(Access.seqCounter)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()    
-        print(f"{access_in.accessTypeId} and {userId}")
+       # tmp_seq= db.query(func.max(Access.seqCounter)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()    
+       # print(f"{access_in.accessTypeId} and {userId}")
         tmp_accesslist = db.query(Access).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).order_by(desc(Access.createdDate)).all()
         for item_Access in tmp_accesslist:
             tmp_AccessBase=AccessBase(
@@ -202,7 +203,42 @@ def getHistoryAccess(payload: dict,access_in: AccessGetIdTypeIN, request: Reques
             )
             access_listOut.listAccess.append(tmp_AccessBase)       
         access_listOut.statuscode="SUCCESS"
-        access_listOut.statusmessage="Address Found" 
+        access_listOut.statusmessage="Access Found" 
+    
+    response_data=access_listOut
+
+    return response_data
+
+def getHistoryAccessAll(payload: dict,request: Request, db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+    address_list=[]
+    address=None
+
+    access_listOut=AccessGetOUT(
+        listAccess=[],
+        statuscode="ERROR",
+        statusmessage="No Access Detail" 
+        )
+    
+   # if access_in.accessTypeId :
+       # tmp_seq= db.query(func.max(Access.seqCounter)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()    
+       # print(f"{access_in.accessTypeId} and {userId}")
+    tmp_accesslist = db.query(Access).filter(Access.idUser == userId).order_by(desc(Access.createdDate)).all()
+    for item_Access in tmp_accesslist:
+        tmp_AccessBase=AccessBase(
+            idaccess =item_Access.idaccess,
+            idUser=item_Access.idUser,  
+            accessTypeId=item_Access.accessTypeId,
+            accessTypeValue=item_Access.accessTypeValue,
+            accessGrantedOn=str(item_Access.accessGrantedOn),
+            accessStatus=item_Access.accessStatus,
+            seqCounter=item_Access.seqCounter
+        )
+        access_listOut.listAccess.append(tmp_AccessBase)       
+    access_listOut.statuscode="SUCCESS"
+    access_listOut.statusmessage="Access List Found " 
     
     response_data=access_listOut
 

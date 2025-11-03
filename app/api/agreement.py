@@ -11,7 +11,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.config import settings
 from app.db.db import get_db, engine
 from app.db.usermodel import Profile
-from app.db.models import Base, Agreement
+from app.db.agreementmodel import Agreement
+from app.db.models import Base
 from app.schemas.schemas import AgreementBase, AgreementDeleteIN, AgreementNewIN, AgreementOut, AgreementGetIN,AgreementGetOUT,AgreementUpdateIN
 
 
@@ -61,7 +62,7 @@ def addAgreement(payload: dict,agreement_in: AgreementNewIN, request: Request, d
     except IntegrityError as e:   
         print(e.detail)         
         db.rollback()
-        raise HTTPException(status_code=400, detail="Address update failed")        
+        raise HTTPException(status_code=400, detail="Agreement update failed")        
 
     return response_data
 
@@ -102,7 +103,7 @@ def updateAgreement(payload: dict,agreement_in: AgreementUpdateIN, request: Requ
 
     return response_data
 
-def getAgreement(payload: dict,agreement_in: AgreementGetIN, request: Request, db: Session = Depends(get_db)):
+def getAgreementId(payload: dict,agreement_in: AgreementGetIN, request: Request, db: Session = Depends(get_db)):
     userId=payload["userid"]
     profileId=payload["profileId"]
     email=payload["email"]    
@@ -114,30 +115,47 @@ def getAgreement(payload: dict,agreement_in: AgreementGetIN, request: Request, d
         statuscode="ERROR",
         statusmessage="No Agreement Found" 
         )
-  
+      
+    tmp_agreement = db.query(Agreement).filter(Agreement.agreementId == agreement_in.agreementId).first()
+    
+    agreement_listOut.listAgreement.append(tmp_agreement)
+    agreement_listOut.statuscode="SUCCESS"
+    agreement_listOut.statusmessage="Agreement Found"                 
+    
+    response_data=agreement_listOut
 
-    if agreement_in.idagreement !="ALL" :
-        tmp_agreement = db.query(Agreement).filter(Agreement.agreementId == agreement_in.agreementId).first()
-       
-        agreement_listOut.listAgreement.append(tmp_agreement)
-        agreement_listOut.statuscode="SUCCESS"
-        agreement_listOut.statusmessage="Agreement Found" 
-    else:
-        agreement_list=db.query(Agreement).filter(Agreement.idUser == userId).all() 
-        for tmpAgreement in agreement_list:
-            tmp_agreementBase=AgreementBase(
-            idagreement=tmpAgreement.idagreement,
-            agreementId= tmpAgreement.agreementId,
-            label= tmpAgreement.label,
-            title= tmpAgreement.title,
-            summary= tmpAgreement.summary,
-            content= tmpAgreement.content,
-            details=tmpAgreement.details,
-            isActive=True            
+    return response_data
+
+
+def getAgreementAll(payload: dict, request: Request, db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+    address_list=[]
+    address=None
+
+    agreement_listOut=AgreementGetOUT(
+        listAgreement=[],
+        statuscode="ERROR",
+        statusmessage="No Agreement Found" 
+        )
+      
+    agreement_list=db.query(Agreement).filter(Agreement.idUser == userId).all() 
+    for tmpAgreement in agreement_list:
+        tmp_agreementBase=AgreementBase(
+        idagreement=tmpAgreement.idagreement,
+        agreementId= tmpAgreement.agreementId,
+        label= tmpAgreement.label,
+        title= tmpAgreement.title,
+        summary= tmpAgreement.summary,
+        content= tmpAgreement.content,
+        details=tmpAgreement.details,
+        isActive=True            
         )                
-            agreement_listOut.listAgreement.append(tmp_agreementBase)
-        agreement_listOut.statuscode="SUCCESS"
-        agreement_listOut.statusmessage="Agreement Found" 
+        agreement_listOut.listAgreement.append(tmp_agreementBase)
+
+    agreement_listOut.statuscode="SUCCESS"
+    agreement_listOut.statusmessage="Agreement Found" 
 
     response_data=agreement_listOut
 
