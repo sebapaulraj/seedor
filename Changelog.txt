@@ -1,0 +1,1 @@
+1. Register API - Name should be mandatory

@@ -21,11 +21,7 @@ from app.utils.emailauth_utils import create_email_token, verify_email_token
 from app.api.user import registerUser,validateUserName,validateLogin
 from app.api.master import getLov
 
-def sendPasswordRestEmail(payload: dict, request: Request, db: Session = Depends(get_db)):
-    # ensure unique email (handled by DB unique constraint but check to return friendly message)
-    userId=payload["userid"]
-    profileId=payload["profileId"]
-    email=payload["email"]
+def sendPasswordRestEmail(email: str):
     response_data=EmailOut(
         statuscode="ERROR",
         statusmessage="Error Sending Email"

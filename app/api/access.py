@@ -117,7 +117,11 @@ def getAccessById(payload: dict,access_in: AccessGetIdIN, request: Request, db: 
         )
     
     if access_in.idaccess :
-        tmp_seq= db.query(func.sum(Access.seqCounter)).filter(Access.idUser == userId).filter(Access.idaccess == access_in.idaccess).scalar()    
+        tmp_seq= db.query(func.max(Access.seqCounter)).filter(Access.idUser == userId).filter(Access.idaccess == access_in.idaccess).scalar()    
+        if not tmp_seq:            
+            response_data=access_listOut
+            return response_data
+        
         tmp_access = db.query(Access).filter(Access.idaccess == access_in.idaccess).filter(Access.seqCounter==tmp_seq).first()
         tmp_AccessBase=AccessBase(
             idaccess =tmp_access.idaccess,
@@ -152,7 +156,10 @@ def getTypeIdAccess(payload: dict,access_in: AccessGetIdTypeIN, request: Request
     
     if access_in.accessTypeId :
         tmp_seq= db.query(func.max(Access.seqCounter)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()    
-        print(f"{access_in.accessTypeId} and {userId}")
+        if not tmp_seq:            
+            response_data=access_listOut
+            return response_data
+        
         tmp_access = db.query(Access).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).filter(Access.seqCounter==tmp_seq).first()
         tmp_AccessBase=AccessBase(
             idaccess =tmp_access.idaccess,

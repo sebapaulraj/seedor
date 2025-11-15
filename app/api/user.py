@@ -15,6 +15,37 @@ from app.schemas.schemas import UserCreate, UserOut,LoginUser,LoginOut,UserName,
 from app.api.auth import hash_password, verify_password
 
 
+def updatePassword(user_in: UserCreate, request: Request, db: Session = Depends(get_db)):
+    # ensure unique email (handled by DB unique constraint but check to return friendly message)
+    new_user = db.query(User).filter(User.email == user_in.email).first()    
+    if new_user is None:
+        raise HTTPException(status_code=400, detail="Invalid Password Reset Request")
+
+    # Hash password
+    hashed_password = hash_password(user_in.password)
+    if(new_user.password==hashed_password):
+        raise HTTPException(status_code=400, detail="New password cannot be same as old password")
+    
+    new_user.password=hashed_password    
+    try:        
+        db.commit()
+        db.refresh(new_user)         
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Invalid Password Reset Request")
+
+    # Return user (without token in body); token could be returned or sent via secure cookie/HTTP-only cookie
+    status_code = "SUCCESS"  # Success code
+    status_message = "Password Reset successfully"   
+    # Create response data with status and message
+    response_data = UserOut(
+        iduser=new_user.iduser,
+        is_active=new_user.is_active,
+        statuscode=status_code,  # Include status
+        statusmessage=status_message  # Include message
+    )
+    return response_data
+
 def registerUser(user_in: UserCreate, request: Request, db: Session = Depends(get_db)):
     # ensure unique email (handled by DB unique constraint but check to return friendly message)
     existing = db.query(User).filter(User.email == user_in.email).first()    
@@ -51,6 +82,7 @@ def registerUser(user_in: UserCreate, request: Request, db: Session = Depends(ge
         statusmessage=status_message  # Include message
     )
     return response_data
+
 
 def validateUserName(userName_in: UserName, request: Request, db: Session = Depends(get_db)):
     # ensure unique email (handled by DB unique constraint but check to return friendly message)

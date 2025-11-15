@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, constr
+from pydantic import BaseModel, ConfigDict, EmailStr, constr, Field
 from typing import List, Optional
 from app.db.accessmodel import Access
 from app.db.agreementmodel import Agreement
@@ -13,7 +13,7 @@ base_model_config = ConfigDict(
 #---------- User -------------#
 
 class UserCreate(BaseModel):
-    name: constr(max_length=120) | None = None
+    name: constr(min_length=3, max_length=120) 
     email: EmailStr
     password: constr(min_length=8, max_length=72)
     
@@ -26,6 +26,10 @@ class UserOut(BaseModel):
 
 class UserName(BaseModel):
     email: EmailStr
+
+class Password(BaseModel):
+    password: str
+    
 
 class UserNameOut(BaseModel):
     email: str
@@ -81,15 +85,15 @@ class LovIn(BaseModel):
 #---------- User Profile -------------#
 
 class UserProfile(BaseModel): 
-    seedorId :str
-    preferedName:str 
-    firstName : str
-    middleName : str   
-    lastName : str 
-    phone :str 
-    countryCode: str 
-    countryName:str   
-    profileType:str
+    seedorId: str = Field(min_length=3)
+    preferedName: str = Field(min_length=3)
+    firstName: str = Field(min_length=3)
+    middleName: str = Field(min_length=0)
+    lastName: str = Field(min_length=3)
+    phone: str = Field(min_length=0)
+    countryCode: str = Field(min_length=3)
+    countryName: str = Field(min_length=3)
+    profileType: str = Field(min_length=3)
 
 class UserProfileOut(BaseModel):
     idprofile: str
@@ -99,7 +103,7 @@ class UserProfileOut(BaseModel):
 #---------- Validate Seedor -------------#
 
 class ValidateSeedorId(BaseModel):
-    seedorId :str
+    seedorId: str =Field(min_length=3)
 
 class ValidateSeedorIdOut(BaseModel):
     seedorIdAvaiable:bool
@@ -109,7 +113,7 @@ class ValidateSeedorIdOut(BaseModel):
 #---------- Reset Password -------------#
 
 class ResetPassword(BaseModel): 
-    idResetPassword :str
+    idResetPassword :str 
     idUser:str
     password : str
     verifyURL : str   
@@ -140,13 +144,13 @@ class AddressBase(BaseModel):
     
 
 class AddressNewIN(BaseModel):
-    label:str
-    street:str
-    area:str
-    city:str
-    stateorProvince:str
-    postalCode:str
-    country:str
+    label:str =Field(min_length=3, max_length=100)
+    street:str =Field(min_length=3, max_length=250)
+    area:str =Field(min_length=0, max_length=250)
+    city:str =Field(min_length=3, max_length=250)
+    stateorProvince:str =Field(min_length=3, max_length=100)
+    postalCode:str =Field(min_length=0, max_length=45)
+    country:str =Field(min_length=3, max_length=100)
 
 class AddressOut(BaseModel):
     idaddress:str
@@ -156,16 +160,16 @@ class AddressOut(BaseModel):
     statusmessage:str 
 
 class AddressUpdateIN(BaseModel):
-    idaddress:str
-    label:str
-    primaryAddress:bool
+    idaddress:str =Field(min_length=3, max_length=45)
+    label:str =Field(min_length=3, max_length=45)
+    primaryAddress:bool =Field(...)
 
 class AddressDeleteIN(BaseModel):
-    idaddress:str
+    idaddress:str  =Field(min_length=3, max_length=45)
    
 
 class AddressGetIN(BaseModel):
-    addressId:str
+    addressId:str =Field(min_length=3, max_length=45)
    
 class AddressGetOUT(BaseModel):
     listAddress:List[AddressBase]
@@ -184,8 +188,8 @@ class AccessBase(BaseModel):
     seqCounter:int
 
 class AccessNewIN(BaseModel):
-    accessTypeId : str
-    accessTypeValue: str 
+    accessTypeId : str  =Field(min_length=3, max_length=45)
+    accessTypeValue: str   =Field(min_length=3, max_length=250)
     
     
 class AccessOut(BaseModel):
@@ -196,13 +200,13 @@ class AccessOut(BaseModel):
     statusmessage:str 
 
 class AccessGetIdIN(BaseModel):
-    idaccess:str
+    idaccess:str =Field(min_length=3, max_length=45)
 
 class AccessGetIdTypeIN(BaseModel):
-    accessTypeId:str  
+    accessTypeId:str   =Field(min_length=3, max_length=45)
     
 class AccessGetIN(BaseModel):
-    idaccess:str
+    idaccess:str =Field(min_length=3, max_length=45)
    
 class AccessGetOUT(BaseModel):
     listAccess:List[AccessBase]
@@ -224,32 +228,32 @@ class AgreementBase(BaseModel):
    
 
 class AgreementNewIN(BaseModel):
-    label : str
-    title: str 
-    summary : str 
-    content : str 
-    details: str
+    label : str =Field(min_length=3, max_length=100)
+    title: str  =Field(min_length=3, max_length=100)
+    summary : str  =Field(min_length=0, max_length=1000)
+    content : str  =Field(min_length=0, max_length=5000)
+    details: str =Field(min_length=3, max_length=5000)
 
 class AgreementOut(BaseModel):
-    idagreement:str
+    agreementId:str
     isActive:bool
     statuscode:str
     statusmessage:str 
 
 class AgreementUpdateIN(BaseModel):
-    idagreement:str
-    label: str
-    title: str
-    summary: str
-    content:str  
-    details:str
+    agreementId:str =Field(min_length=3, max_length=45)
+    label: str =Field(min_length=3, max_length=100)
+    title: str  =Field(min_length=3, max_length=100)
+    summary : str  =Field(min_length=0, max_length=1000)
+    content : str  =Field(min_length=0, max_length=5000)
+    details: str =Field(min_length=3, max_length=5000)
     
 
 class AgreementDeleteIN(BaseModel):
-    idagreement:str
+    idagreement:str =Field(min_length=3, max_length=45)
 
 class AgreementGetIN(BaseModel):
-    agreementId:str
+    agreementId:str =Field(min_length=3, max_length=45)
    
 class AgreementGetOUT(BaseModel):
     listAgreement:List[AgreementBase]
@@ -284,11 +288,11 @@ class ShipmentOut(BaseModel):
     statusmessage:str 
 
 class ShipmentUpdateIN(BaseModel):
-    idshipment:str
-    isActive:str
+    idshipment:str =Field(min_length=3, max_length=45)
+    isActive:str =Field(...)
     
 class ShipmentGetIN(BaseModel):
-    shipmentCode:str
+    shipmentCode:str =Field(min_length=3, max_length=45)
    
 class ShipmentGetOUT(BaseModel):
     listShipment:List[ShipmentBase]
@@ -299,7 +303,7 @@ class ShipmentGetOUT(BaseModel):
 #----------Shipment Tracking-------------#
 
 class ShipmenttrackingBase(BaseModel):
-    idshipmenttracking:str  
+    idshipmenttracking:str   
     idUserSeedorId:str 
     shipmentCode :str
     shipmentTransitCode:str
@@ -312,12 +316,12 @@ class ShipmenttrackingBase(BaseModel):
       
 
 class ShipmenttrackingNewIN(BaseModel):   
-    userSeedorid : str 
-    shipmentTransitCode : str 
-    shipmentTransitTitle: str
-    shipmenttrackingcontent: str
-    shipmentTransitSummary: str
-    shipmentTransitDetail: str
+    userSeedorid : str  =Field(min_length=3, max_length=100)
+    shipmentTransitCode : str  =Field(min_length=3, max_length=250)
+    shipmentTransitTitle: str =Field(min_length=3, max_length=100)
+    shipmenttrackingcontent: str =Field(min_length=3, max_length=1000)
+    shipmentTransitSummary: str =Field(min_length=0, max_length=500)
+    shipmentTransitDetail: str =Field(min_length=0, max_length=2500)
         
 
 class ShipmenttrackingOut(BaseModel):
@@ -328,17 +332,17 @@ class ShipmenttrackingOut(BaseModel):
     statusmessage:str 
 
 class ShipmenttrackingUpdateIN(BaseModel):
-    shipmentCode:str
-    userSeedorid : str 
-    shipmentTransitCode : str 
-    shipmentTransitTitle: str
-    shipmenttrackingcontent: str
-    shipmentTransitSummary: str
-    shipmentTransitDetail: str
-    isActive:str
+    shipmentCode:str =Field(min_length=3, max_length=45)
+    userSeedorid : str =Field(min_length=3, max_length=100)
+    shipmentTransitCode : str  =Field(min_length=3, max_length=250)
+    shipmentTransitTitle: str =Field(min_length=3, max_length=100)
+    shipmenttrackingcontent: str =Field(min_length=3, max_length=1000)
+    shipmentTransitSummary: str =Field(min_length=0, max_length=500)
+    shipmentTransitDetail: str =Field(min_length=0, max_length=2500)
+    isActive:str=Field(...)
     
 class ShipmenttrackingGetIN(BaseModel):
-    shipmentCode:str
+    shipmentCode:str =Field(min_length=3, max_length=45)
    
 class ShipmenttrackingGetOUT(BaseModel):
     shipmentCode:str

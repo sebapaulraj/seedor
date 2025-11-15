@@ -36,7 +36,11 @@ def addAddress(payload: dict,address_in: AddressNewIN, request: Request, db: Ses
     tmp_count= db.query(func.count(Address.idaddress)).filter(Address.idUser == userId).scalar()
     if not tmp_count or tmp_count==0:
         tmp_count=1
+    else:
+        tmp_count=tmp_count+1
+
     profile=db.query(Profile).filter(Profile.idprofile == profileId).first()
+    
 
     tmp_addressId=profile.seedorId
     tmp_addressCode="AD"
@@ -128,8 +132,9 @@ def getAddressesId(payload: dict,address_in: AddressGetIN, request: Request, db:
     
     address = db.query(Address).filter(Address.addressId == address_in.addressId).first()
     if not address :
-         raise HTTPException(status_code=400, detail="Address Update Failed")  
-    
+        response_data=address_listOut
+        return response_data
+     
     tmp_AddressBase=AddressBase(
             idaddress = address.idaddress, 
             addressId=address.addressId,

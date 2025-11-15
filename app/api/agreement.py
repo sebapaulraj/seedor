@@ -23,7 +23,7 @@ def addAgreement(payload: dict,agreement_in: AgreementNewIN, request: Request, d
     email=payload["email"]    
     
     response_data=AgreementOut(
-        idagreement="",
+        agreementId="",
         isActive=False,
         statuscode="ERROR",
         statusmessage="Invalid Agreement Object"  
@@ -32,6 +32,8 @@ def addAgreement(payload: dict,agreement_in: AgreementNewIN, request: Request, d
     tmp_count= db.query(func.count(Agreement.idUser)).filter(Agreement.idUser == userId).scalar()
     if not tmp_count or tmp_count==0:
         tmp_count=1
+    else:
+        tmp_count=tmp_count+1
 
     profile=db.query(Profile).filter(Profile.idprofile == profileId).first() 
 
@@ -55,7 +57,7 @@ def addAgreement(payload: dict,agreement_in: AgreementNewIN, request: Request, d
         db.add(new_Agreement)
         db.commit()
         db.refresh(new_Agreement) 
-        response_data.idagreement=new_Agreement.idagreement
+        response_data.agreementId=new_Agreement.agreementId
         response_data.isActive=new_Agreement.isActive
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Agreement Added Successfully"
@@ -73,15 +75,15 @@ def updateAgreement(payload: dict,agreement_in: AgreementUpdateIN, request: Requ
     email=payload["email"]    
     
     response_data=AgreementOut(
-        idagreement="",
+        agreementId="",
         isActive=False,
         statuscode="ERROR",
         statusmessage="Invalid Agreement Object"  
         )
     
     new_Agreement=None
-    if agreement_in.idagreement :
-        new_Agreement = db.query(Agreement).filter(Agreement.idagreement == agreement_in.idagreement).first()
+    if agreement_in.agreementId :
+        new_Agreement = db.query(Agreement).filter(Agreement.agreementId == agreement_in.agreementId).first()
 
         new_Agreement.label=agreement_in.label,
         new_Agreement.title=agreement_in.title,
@@ -93,7 +95,7 @@ def updateAgreement(payload: dict,agreement_in: AgreementUpdateIN, request: Requ
     try:
         db.commit()
         db.refresh(new_Agreement) 
-        response_data.idagreement=new_Agreement.idagreement
+        response_data.agreementId=new_Agreement.agreementId
         response_data.isActive=new_Agreement.isActive
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Agreement Updated Successfully"
@@ -169,7 +171,7 @@ def deleteAgreement(payload: dict,agreement_in: AgreementDeleteIN, request: Requ
     email=payload["email"]    
     
     response_data=AgreementOut(
-        idagreement="",
+        agreementId="",
         isActive=False,   
         statuscode="ERROR",
         statusmessage="Invalid Agreement Update"  
@@ -192,7 +194,7 @@ def deleteAgreement(payload: dict,agreement_in: AgreementDeleteIN, request: Requ
     try:
         db.commit()
         db.refresh(new_Agreement) 
-        response_data.idagreement=new_Agreement.idagreement
+        response_data.agreementId=new_Agreement.agreementId
         response_data.isActive=new_Agreement.isActive
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Agreement Deleted Successfully"
