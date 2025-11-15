@@ -29,12 +29,12 @@ jobs:
       # 4. Build Docker image
       - name: Build Docker image
         run: |
-          docker build -f Dockerfile.dev -t ${{ secrets.DOCKERHUB_TOKEN }}/seedor-app:latest .
+          docker build -f Dockerfile.dev -t ${{ secrets.DOCKERHUB_TOKEN | lower }}/seedor-app:latest .
 
       # 5. Push Docker image to Docker Hub
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_TOKEN }}/seedor-app:latest
+          docker push ${{ secrets.DOCKERHUB_TOKEN  | lower}}/seedor-app:latest
 
       # 6. (Optional) Deploy via SSH
       - name: Deploy to Server via SSH
