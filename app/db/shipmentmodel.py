@@ -11,10 +11,11 @@ class Shipment(Base):
 
     idshipment = Column(String(45), primary_key=True, index=True,default=lambda: str(uuid.uuid4()), unique=True)    
     shipmentCode=Column(String(45), nullable=False)    
-    idUser = Column(String(100), nullable=False)
+    agencyId = Column(String(100), nullable=False)
     label= Column(String(100), nullable=False)
     shipperId=Column(String(100), nullable=False)
     shipperName= Column(String(100), nullable=True)
+    deliveryId= Column(String(100), default='SEEDOR', nullable=True)
     description= Column(String(1000), nullable=True)
     isActive=Column(Boolean, nullable=False)
     createdBy = Column(String(45),default='SEEDOR',nullable=False)

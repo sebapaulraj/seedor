@@ -23,30 +23,26 @@ def addShipment(payload: dict,shipment_in: ShipmentNewIN, request: Request, db: 
     email=payload["email"]    
     
     response_data=ShipmentOut(
-        idshipment=None,
-        isActive=None,
+        idshipment="",
+        isActive=False,
         statuscode="ERROR",
         statusmessage="Invalid shipment Object"  
     )    
 
-    tmp_count= db.query(func.count(Shipment.idUser)).filter(Shipment.idUser == userId).scalar()
-    if not tmp_count or tmp_count==0:
-        tmp_count=1
-    else:
-        tmp_count=tmp_count+1
-
+    tmp_count= db.query(func.count(Shipment.shipperId)).filter(Shipment.shipperId == userId).scalar()
+    tmp_count=tmp_count+1 if tmp_count else 1
     profile=db.query(Profile).filter(Profile.idprofile == profileId).first() 
-
-    tmp_seedorId=profile.seedorId
-    tmp_Code="SH"
-    
+    agency=db.query(Profile).filter(Profile.seedorId == shipment_in.agencySeedorId).first()
+    deleivery=db.query(Profile).filter(Profile.seedorId == shipment_in.deliverySeedorId).first()
+        
     new_shipment=Shipment(
-        shipmentCode=tmp_seedorId+"/"+tmp_Code+"/"+str(tmp_count),
-        idUser=userId,
+        shipmentCode=profile.seedorId+"/SH/"+str(tmp_count),
+        agencyId=agency.authIduser if agency else "SEEDOR",
         label="SHIPMENT",
-        shipperId= shipment_in.shipperId,
-        shipperName= shipment_in.shipperName,
+        shipperId= profile.authIduser,
+        shipperName= profile.preferedName,
         description= shipment_in.description,
+        deliveryId= deleivery.authIduser if deleivery else "SEEDOR",
         isActive=True,
         createdBy = userId,
         updatedBy = userId    
@@ -65,6 +61,7 @@ def addShipment(payload: dict,shipment_in: ShipmentNewIN, request: Request, db: 
 
     return response_data
 
+
 def updateShipment(payload: dict,shipment_in: ShipmentUpdateIN, request: Request, db: Session = Depends(get_db)):
     # ensure unique email (handled by DB unique constraint but check to return friendly message)
     userId=payload["userid"]
@@ -75,21 +72,23 @@ def updateShipment(payload: dict,shipment_in: ShipmentUpdateIN, request: Request
         idshipment="",
         isActive=False,
         statuscode="ERROR",
-        statusmessage="Invalid shipment Object"  
+        statusmessage="Invalid shipment "  
         )
     
- 
-    if shipment_in.idshipment :
-        new_shipment = db.query(Shipment).filter(Shipment.idshipment == shipment_in.idshipment).first()
-   
-    new_shipment.isActive=shipment_in.isActive,
-    new_shipment.createdBy = userId,
+    new_shipment = db.query(Shipment).filter(Shipment.idshipment == shipment_in.idshipment).first()   
+    if not new_shipment:
+        raise HTTPException(status_code=404, detail="shipment not found")
+    agencyUser=db.query(Profile).filter(Profile.seedorId == shipment_in.agencySeedorId).first()   
+    deliveryUser=db.query(Profile).filter(Profile.seedorId == shipment_in.deliverySeedorId).first()
+    new_shipment.agencyId=agencyUser.authIduser if agencyUser else new_shipment.agencyId,     
+    new_shipment.deliveryId=deliveryUser.authIduser if deliveryUser else new_shipment.deliveryId,
+    new_shipment.description=shipment_in.description if shipment_in.description else new_shipment.description,    
     new_shipment.updatedBy = userId    
     try:
         db.commit()
         db.refresh(new_shipment) 
         response_data.idshipment=new_shipment.idshipment
-        response_data.shipmentStatus=new_shipment.shipmentStatus
+        response_data.isActive=new_shipment.isActive
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="shipment Updated Successfully"
     except IntegrityError as e:            
@@ -98,29 +97,72 @@ def updateShipment(payload: dict,shipment_in: ShipmentUpdateIN, request: Request
 
     return response_data
 
-def getShipment(payload: dict,shipment_in: ShipmentGetIN, request: Request, db: Session = Depends(get_db)):
+def getShipmentAgent(payload: dict,request: Request, db: Session = Depends(get_db)):
     userId=payload["userid"]
     profileId=payload["profileId"]
-    email=payload["email"]   
-   
+    email=payload["email"]    
+    address_list=[]
+    address=None
 
     shipment_listOut=ShipmentGetOUT(
         listShipment=[],
         statuscode="ERROR",
-        statusmessage="No Shipment Found" 
+        statusmessage="No Shipment Tracking Found" 
         )
 
-    if shipment_in.idshipment :
-        shipment = db.query(Shipment).filter(Shipment.shipmentCode == shipment_in.shipmentCode).first()
-        shipment_listOut.listShipment.append(shipment)
-        statuscode="SUCCESS"
-        statusmessage="Shipment Found" 
-    else:
-        shipment_list=db.query(Shipment).filter(Shipment.idUser == userId).all()        
-        for tmpshipment in shipment_list:            
-            shipment_listOut.listshipment.append(tmpshipment)
-        shipment_listOut.statuscode="SUCCESS"
-        shipment_listOut.statusmessage="Shipment Found" 
+    shipmenttracking_list=db.query(Shipment).filter(Shipment.agencyId == userId).all()
+    for tmp_Shipment in shipmenttracking_list:            
+        shipment_listOut.listShipment.append(tmp_Shipment)
+    shipment_listOut.statuscode="SUCCESS"
+    shipment_listOut.statusmessage="Shipment Tracking Found" 
+
+    response_data=shipment_listOut
+
+    return response_data
+
+
+def getShipmentDelivery(payload: dict,request: Request, db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+    address_list=[]
+    address=None
+
+    shipment_listOut=ShipmentGetOUT(
+        listShipment=[],
+        statuscode="ERROR",
+        statusmessage="No Shipment Tracking Found" 
+        )
+
+    shipmenttracking_list=db.query(Shipment).filter(Shipment.deliveryId == userId).all()
+    for tmp_Shipment in shipmenttracking_list:            
+        shipment_listOut.listShipment.append(tmp_Shipment)
+    shipment_listOut.statuscode="SUCCESS"
+    shipment_listOut.statusmessage="Shipment Tracking Found" 
+
+    response_data=shipment_listOut
+
+    return response_data
+
+
+def getShipmentShipper(payload: dict,request: Request, db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+    address_list=[]
+    address=None
+
+    shipment_listOut=ShipmentGetOUT(
+        listShipment=[],
+        statuscode="ERROR",
+        statusmessage="No Shipment Tracking Found" 
+        )
+
+    shipmenttracking_list=db.query(Shipment).filter(Shipment.shipperId == userId).all()
+    for tmp_Shipment in shipmenttracking_list:            
+        shipment_listOut.listShipment.append(tmp_Shipment)
+    shipment_listOut.statuscode="SUCCESS"
+    shipment_listOut.statusmessage="Shipment Tracking Found" 
 
     response_data=shipment_listOut
 

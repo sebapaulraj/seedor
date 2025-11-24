@@ -75,15 +75,21 @@ def validateSeedorId(payload: dict,newSeedorId_in: ValidateSeedorId,request: Req
     email=payload["email"]    
     profile=None
     if newSeedorId_in :
-        profile = db.query(Profile).filter(Profile.seedorId == newSeedorId_in.seedorId).first()
-
+        profile = db.query(Profile).filter(Profile.seedorId == newSeedorId_in.seedorId).first()    
     response_data=ValidateSeedorIdOut(
         seedorIdAvaiable=False,
         statuscode="ERROR",
         statusmessage="SeedorID Already Taken"  
     )
 
-    if not profile :
+    if not profile :  
+        try:      
+            myprofile = db.query(Profile).filter(Profile.idprofile == profileId).first()
+            myprofile=newSeedorId_in.seedorId
+            db.commit() 
+        except IntegrityError as e:            
+            db.rollback()
+            raise HTTPException(status_code=400, detail="SeedorId update failed")
         response_data.seedorIdAvaiable=True
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="SeedorId Available"

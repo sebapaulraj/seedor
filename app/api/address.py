@@ -61,6 +61,8 @@ def addAddress(payload: dict,address_in: AddressNewIN, request: Request, db: Ses
     new_Address.createdBy = userId
     new_Address.updatedBy = userId 
     try:
+        # Deactivate old primary addresses
+        db.query(Address).filter_by(idUser=new_Address.idUser, primaryAddress=1).update({"primaryAddress": 0})
         db.add(new_Address)
         db.commit()
         db.refresh(new_Address) 
@@ -90,6 +92,9 @@ def updateAddress(payload: dict,address_in: AddressUpdateIN, request: Request, d
     
     new_Address=None
     if address_in.idaddress :
+        if address_in.primaryAddress==True:
+            db.query(Address).filter_by(idUser=new_Address.idUser, primaryAddress=1).update({"primaryAddress": 0})
+        
         new_Address = db.query(Address).filter(Address.idaddress == address_in.idaddress).first()
         #new_Address.isActive=address_in.isActive
         new_Address.label= address_in.label

@@ -26,8 +26,8 @@ from app.core.rate_limit import check_rate_limit
 from email_validator import validate_email, EmailNotValidError
 from app.core.email_security import send_verification_email
 from app.utils.emailauth_utils import create_email_token, verify_email_token
-from app.api.shipment import addShipment, getShipment, updateShipment
-from app.api.shipmenttracking import addShipmenttracking, getShipmenttracking, getShipmenttrackingAll, updateShipmenttracking
+from app.api.shipment import addShipment, getShipmentAgent, getShipmentDelivery, getShipmentShipper, updateShipment
+from app.api.shipmenttracking import addShipmenttracking, getShipmenttracking,updateShipmenttracking
 from app.api.user import registerUser, updatePassword,validateUserName,validateLogin
 from app.api.master import getLov
 from app.api.userprofile import updateProfile,validateSeedorId
@@ -520,7 +520,7 @@ async def consentGetSignedAll(request: Request, db: Session = Depends(get_db)):
 
 #------- consent block ends -------------
 
-'''
+
 #------- shipment block started -------------
 @app.post("/seedor/1.0/shipment/add", response_model=ShipmentOut, status_code=201)
 async def shipmentAdd(shipment_in: ShipmentNewIN, request: Request, db: Session = Depends(get_db)):
@@ -544,24 +544,45 @@ async def shipmentUpdate(shipment_in: ShipmentUpdateIN, request: Request, db: Se
     response.headers["X-Access-Token"] = str(token)
     return response
 
-
-@app.get("/seedor/1.0/shipment", response_model=ShipmentOut, status_code=201)
-async def shipmentGet(shipment_in: ShipmentUpdateIN, request: Request, db: Session = Depends(get_db)):
+@app.get("/seedor/1.0/shipment/agent", response_model=ShipmenttrackingOut, status_code=201)
+async def shipmentGetAgent(request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
     payload=verify_access_token(token)
-    response_data=getShipment(payload,shipment_in, request, db)
+    response_data=getShipmentAgent(payload,request, db)
+    response = JSONResponse(status_code=200, content=response_data.dict())
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/shipment/delivery", response_model=ShipmenttrackingOut, status_code=201)
+async def shipmentGetDelivery(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getShipmentDelivery(payload,request, db)
+    response = JSONResponse(status_code=200, content=response_data.dict())
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/shipment/shipper", response_model=ShipmenttrackingOut, status_code=201)
+async def shipmentGetShipper(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getShipmentShipper(payload,request, db)
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
     return response
 
 #------- shipment block ends -------------
 
-'''
+
 
 #------- shipmenttracking block started -------------
-@app.post("/seedor/1.0/shipment/add", response_model=ShipmenttrackingOut, status_code=201)
+@app.post("/seedor/1.0/shipment/track/add", response_model=ShipmenttrackingOut, status_code=201)
 async def shipmenttrackingAdd(shipmenttracking_in: ShipmenttrackingNewIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -572,7 +593,7 @@ async def shipmenttrackingAdd(shipmenttracking_in: ShipmenttrackingNewIN, reques
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.put("/seedor/1.0/shipment/update", response_model=ShipmenttrackingOut, status_code=201)
+@app.put("/seedor/1.0/shipment/track/update", response_model=ShipmenttrackingOut, status_code=201)
 async def shipmenttrackingUpdate(shipmenttracking_in: ShipmenttrackingUpdateIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -583,8 +604,7 @@ async def shipmenttrackingUpdate(shipmenttracking_in: ShipmenttrackingUpdateIN, 
     response.headers["X-Access-Token"] = str(token)
     return response
 
-
-@app.get("/seedor/1.0/shipment/{code:path}", response_model=ShipmenttrackingOut, status_code=201)
+@app.get("/seedor/1.0/shipment/track/{code:path}", response_model=ShipmenttrackingOut, status_code=201)
 async def shipmenttrackingGet(request: Request, db: Session = Depends(get_db),code: str = Path(...,min_length=3,max_length=200)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -595,18 +615,6 @@ async def shipmenttrackingGet(request: Request, db: Session = Depends(get_db),co
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
     return response
-
-@app.get("/seedor/1.0/shipment/items", response_model=ShipmenttrackingOut, status_code=201)
-async def shipmenttrackingGetAll(request: Request, db: Session = Depends(get_db)):
-    # Rate limit check (basic)
-    #check_rate_limit(request)
-    token=get_bearer_token(request)
-    payload=verify_access_token(token)
-    response_data=getShipmenttrackingAll(payload,request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
-    response.headers["X-Access-Token"] = str(token)
-    return response
-
 
 #------- shipmenttracking block ends -------------
 

@@ -265,21 +265,19 @@ class AgreementGetOUT(BaseModel):
 
 class ShipmentBase(BaseModel):
     shipmentCode:str  
-    idUser : str
+    agencyId : str
     label : str
     shipperId:str
     shipperName:str
     description:str
+    deliveryId:str
     isActive:bool
    
 class ShipmentNewIN(BaseModel):
-    shipmentCode : str
-    idUser: str 
-    label : str 
-    shipperId:str
-    shipperName : str 
-    description: str
-    isActive:bool    
+    agencySeedorId:str
+    deliverySeedorId:str 
+    description: str =Field(min_length=3)
+       
 
 class ShipmentOut(BaseModel):
     idshipment:str
@@ -289,8 +287,10 @@ class ShipmentOut(BaseModel):
 
 class ShipmentUpdateIN(BaseModel):
     idshipment:str =Field(min_length=3, max_length=45)
-    isActive:str =Field(...)
-    
+    agencySeedorId:str 
+    deliverySeedorId:str 
+    description: str 
+
 class ShipmentGetIN(BaseModel):
     shipmentCode:str =Field(min_length=3, max_length=45)
    

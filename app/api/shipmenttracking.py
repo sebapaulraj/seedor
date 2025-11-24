@@ -123,26 +123,3 @@ def getShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingGetIN
     return response_data
 
 
-def getShipmenttrackingAll(payload: dict,request: Request, db: Session = Depends(get_db)):
-    userId=payload["userid"]
-    profileId=payload["profileId"]
-    email=payload["email"]    
-    address_list=[]
-    address=None
-
-    shipment_listOut=ShipmentGetOUT(
-        listShipment=[],
-        statuscode="ERROR",
-        statusmessage="No Shipment Tracking Found" 
-        )
-
-    shipmenttracking_list=db.query(Shipment).filter(Shipment.idUser == userId).all()
-    for tmp_Shipment in shipmenttracking_list:            
-        shipment_listOut.listShipment.append(tmp_Shipment)
-    shipment_listOut.statuscode="SUCCESS"
-    shipment_listOut.statusmessage="Shipment Tracking Found" 
-
-    response_data=shipment_listOut
-
-    return response_data
-
