@@ -37,7 +37,7 @@ def grandAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Sess
         idUser=userId,
         accessTypeId=access_in.accessTypeId,
         accessTypeValue=access_in.accessTypeValue,  
-        accessStatus="GRAND",
+        accessStatus="PUBLIC",
         seqCounter=tmp_count,
         createdBy = userId,
         updatedBy = userId    
@@ -81,7 +81,7 @@ def revokeAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Ses
         idUser=userId,
         accessTypeId=access_in.accessTypeId,
         accessTypeValue=access_in.accessTypeValue,  
-        accessStatus="REVOKE",
+        accessStatus="PRIVATE",
         seqCounter=tmp_count,
         createdBy = userId,
         updatedBy = userId    

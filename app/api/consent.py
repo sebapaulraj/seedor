@@ -65,7 +65,7 @@ def createConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         Access.accessTypeValue == consentReq_in.itemType).filter(
         Access.idUser==profile.authIduser).filter(Access.seqCounter==tmp_accessCount).first()
     
-    if not tmpAccess or tmpAccess.accessStatus!="GRAND":
+    if not tmpAccess or tmpAccess.accessStatus!="PUBLIC":
         response_data.statuscode="ERROR"
         response_data.statusmessage="Item has restricted access!"
         return response_data  
@@ -139,7 +139,7 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
 
     profile = db.query(Profile).filter(Profile.seedorId == consentReq_in.itemBeneficiarySeedorId).first()
     if not profile:
-        response_data.statusmessage="Invalid Signatory Seedorid"
+        response_data.statusmessage="Invalid Beneficiry Seedorid"
         return response_data
     
     tmp_accessCount=db.query(func.max(Access.seqCounter)).filter(
@@ -148,7 +148,7 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         Access.idUser==userId).scalar() 
     
     if not tmp_accessCount:
-       response_data.statusmessage="Invalid Consent Seedorid"
+       response_data.statusmessage="Item has private access!"
        return response_data
      
     tmpAccess=db.query(Access).filter(
@@ -156,8 +156,8 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         Access.accessTypeValue == consentReq_in.itemType).filter(
         Access.idUser==userId).filter(Access.seqCounter==tmp_accessCount).first()
     
-    if not tmpAccess or tmpAccess.accessStatus!="GRAND":
-        response_data.statusmessage="Invalid Consent Seedorid"
+    if not tmpAccess or tmpAccess.accessStatus!="PUBLIC":
+        response_data.statusmessage="Item has private access"
         return response_data 
     
     tmp_seq= db.query(func.max(ConsentRequest.seqCounter)).filter(

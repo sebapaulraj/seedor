@@ -196,7 +196,7 @@ async def lov( request: Request, db: Session = Depends(get_db),id: str = Path(..
 #------- master block ends -------------
 
 #------- access block started -------------
-@app.post("/seedor/1.0/access/grand", response_model=AccessOut, status_code=201)
+@app.post("/seedor/1.0/access/public", response_model=AccessOut, status_code=201)
 async def accessGrand(access_in: AccessNewIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
@@ -207,7 +207,7 @@ async def accessGrand(access_in: AccessNewIN, request: Request, db: Session = De
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.post("/seedor/1.0/access/revoke", response_model=AccessOut, status_code=201)
+@app.post("/seedor/1.0/access/private", response_model=AccessOut, status_code=201)
 async def accessRevoke(access_in: AccessNewIN, request: Request, db: Session = Depends(get_db)):
     # Rate limit check (basic)
     #check_rate_limit(request)
