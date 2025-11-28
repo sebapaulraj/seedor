@@ -23,6 +23,7 @@ def addAgreement(payload: dict,agreement_in: AgreementNewIN, request: Request, d
     email=payload["email"]    
     
     response_data=AgreementOut(
+        idagreement="",
         agreementId="",
         isActive=False,
         statuscode="ERROR",
@@ -57,6 +58,7 @@ def addAgreement(payload: dict,agreement_in: AgreementNewIN, request: Request, d
         db.add(new_Agreement)
         db.commit()
         db.refresh(new_Agreement) 
+        response_data.idagreement=new_Agreement.idagreement
         response_data.agreementId=new_Agreement.agreementId
         response_data.isActive=new_Agreement.isActive
         response_data.statuscode="SUCCESS"
@@ -75,6 +77,7 @@ def updateAgreement(payload: dict,agreement_in: AgreementUpdateIN, request: Requ
     email=payload["email"]    
     
     response_data=AgreementOut(
+        idagreement="",
         agreementId="",
         isActive=False,
         statuscode="ERROR",
@@ -95,6 +98,7 @@ def updateAgreement(payload: dict,agreement_in: AgreementUpdateIN, request: Requ
     try:
         db.commit()
         db.refresh(new_Agreement) 
+        response_data.idagreement=new_Agreement.idagreement
         response_data.agreementId=new_Agreement.agreementId
         response_data.isActive=new_Agreement.isActive
         response_data.statuscode="SUCCESS"
@@ -171,6 +175,7 @@ def deleteAgreement(payload: dict,agreement_in: AgreementDeleteIN, request: Requ
     email=payload["email"]    
     
     response_data=AgreementOut(
+        idagreement="",
         agreementId="",
         isActive=False,   
         statuscode="ERROR",
@@ -194,6 +199,7 @@ def deleteAgreement(payload: dict,agreement_in: AgreementDeleteIN, request: Requ
     try:
         db.commit()
         db.refresh(new_Agreement) 
+        response_data.idagreement=new_Agreement.idagreement
         response_data.agreementId=new_Agreement.agreementId
         response_data.isActive=new_Agreement.isActive
         response_data.statuscode="SUCCESS"

@@ -235,6 +235,7 @@ class AgreementNewIN(BaseModel):
     details: str =Field(min_length=3, max_length=5000)
 
 class AgreementOut(BaseModel):
+    idagreement:str
     agreementId:str
     isActive:bool
     statuscode:str
