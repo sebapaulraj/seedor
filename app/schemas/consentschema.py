@@ -27,6 +27,19 @@ class ConsentRequestNewIN(BaseModel):
     itemBeneficiarySeedorId : str 
     itemType: str
     itemId:str
+    consentValididtyFrequency:str
+
+class ConsentRequest(BaseModel):
+    idconsentrequest:str
+    itemOwnerIdUser:str  
+    itemBeneficiaryIdUser:str
+    itemType: str
+    itemId:str
+    status:str
+    consentValididtyFrequency:str
+    requestedBy:str
+    requestedTo:str
+    seqCounter:int
 
 class ConsentRequestOut(BaseModel):
     idconsentrequest:str
@@ -35,13 +48,24 @@ class ConsentRequestOut(BaseModel):
     itemType: str
     itemId:str
     status:str
+    consentValididtyFrequency:str
     requestedBy:str
     requestedTo:str
+    seqCounter:int
     isactiveConnection:bool
     consentSendStatus:str   
     statuscode:str
     statusmessage:str 
-   
+
+
+class ConsentRequestGETIN(BaseModel):   
+    itemType: str
+    itemId:str
+      
+class ConsentRequestallOUT(BaseModel):   
+    listConsentRequest:List[ConsentRequest]
+    statuscode:str
+    statusmessage:str
 #---------- ConsentRequest End -------------#
 
 

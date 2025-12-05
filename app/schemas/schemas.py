@@ -82,6 +82,16 @@ class LovOut(BaseModel):
 class LovIn(BaseModel):
     lovCode: str
 
+class LovAddressIn(BaseModel):
+    country_code: str
+    postal_code: str
+
+class MasterDataInsertOut(BaseModel): 
+    inserted:str
+    skipped: str
+    total:int
+    
+
 #---------- User Profile -------------#
 
 class UserProfile(BaseModel): 

@@ -1,1 +1,14 @@
 1. Register API - Name should be mandatory
+
+
+Can you create a code for followign scenario.
+Input is a image file
+Identify the Object/pacage
+Identify the name, dimention.
+
+
+Header add in 
+Address delete - response message (Deleted Successfully)
+Consent -- Request not able 
+Agreemnt -- Isactive --change
+

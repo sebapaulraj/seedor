@@ -14,13 +14,14 @@ from app.api.access import getAccessById, getHistoryAccess, getHistoryAccessAll,
 from app.api.address import addAddress, deleteAddress,getAddressesAll, getAddressesId, updateAddress
 from app.api.agreement import addAgreement, deleteAgreement,getAgreementAll, getAgreementId, updateAgreement
 from app.core.config import settings
-from app.api.consent import acceptConsentOffer, acceptConsentRequest, createConsentOffer, createConsentRequest,  getConsentOfferdAll, getConsentOfferdId,  getConsentSignedAll, getConsentSignedId, rejectConsentOffer, rejectConsentRequest
+from app.api.consent import   getConsentOfferdAll, getConsentOfferdId,  getConsentSignedAll, getConsentSignedId
+from app.api.consentrequest import acceptConsentOffer, acceptConsentRequest, createConsentOffer, createConsentRequest, getconsentRequestHistoryItemId, getconsentRequestHistoryItemType,rejectConsentOffer, rejectConsentRequest
 from app.db.db import get_db, engine
 from app.db.usermodel import User,Profile
 from app.db.mastermodel import Lov
 from app.db.models import Base
-from app.schemas.consentschema import ConsentGetIN, ConsentGetOUT, ConsentRequestNewIN, ConsentRequestOut, ConsentUpdateIN
-from app.schemas.schemas import AccessGetIdIN, AccessGetIdTypeIN, AccessNewIN, AccessOut, AddressDeleteIN, AddressGetIN, AddressGetOUT, AddressNewIN, AddressOut, AddressUpdateIN, AgreementDeleteIN, AgreementGetIN, AgreementNewIN, AgreementOut, AgreementUpdateIN, Password,ShipmentNewIN, ShipmentOut, ShipmentUpdateIN, ShipmenttrackingGetIN, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingUpdateIN, UserCreate, UserOut,LoginUser,LoginOut,LovOut,LovIn,UserName,UserNameOut,UserProfile,UserProfileOut,ValidateSeedorId,ValidateSeedorIdOut
+from app.schemas.consentschema import ConsentGetIN, ConsentGetOUT, ConsentRequestGETIN, ConsentRequestNewIN, ConsentRequestOut, ConsentUpdateIN
+from app.schemas.schemas import AccessGetIdIN, AccessGetIdTypeIN, AccessNewIN, AccessOut, AddressDeleteIN, AddressGetIN, AddressGetOUT, AddressNewIN, AddressOut, AddressUpdateIN, AgreementDeleteIN, AgreementGetIN, AgreementNewIN, AgreementOut, AgreementUpdateIN, LovAddressIn, Password,ShipmentNewIN, ShipmentOut, ShipmentUpdateIN, ShipmenttrackingGetIN, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingUpdateIN, UserCreate, UserOut,LoginUser,LoginOut,LovOut,LovIn,UserName,UserNameOut,UserProfile,UserProfileOut,ValidateSeedorId,ValidateSeedorIdOut
 from app.api.auth import create_access_token,verify_access_token,get_bearer_token,manual_basic_auth,verify_basic_auth
 from app.core.rate_limit import check_rate_limit
 from email_validator import validate_email, EmailNotValidError
@@ -29,7 +30,7 @@ from app.utils.emailauth_utils import create_email_token, verify_email_token
 from app.api.shipment import addShipment, getShipmentAgent, getShipmentDelivery, getShipmentShipper, updateShipment
 from app.api.shipmenttracking import addShipmenttracking, getShipmenttracking,updateShipmenttracking
 from app.api.user import registerUser, updatePassword,validateUserName,validateLogin
-from app.api.master import getLov
+from app.api.master import getLov, insert_countries, insert_states, lookup_zip
 from app.api.userprofile import updateProfile,validateSeedorId
 from app.api.resetPassword import sendPasswordRestEmail
 
@@ -471,6 +472,30 @@ async def consentRejectRequestOffer(consent_in: ConsentRequestNewIN, request: Re
     response.headers["X-Access-Token"] = str(token)
     return response
 
+@app.get("/seedor/1.0/consent/request/type/{itemType:path}", response_model=ConsentRequestOut, status_code=201)
+async def consentRequestHistoryItemType(request: Request, db: Session = Depends(get_db),itemType: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    consentRequest_in= ConsentRequestGETIN(itemType=itemType,itemId="")
+    response_data=getconsentRequestHistoryItemType(payload,consentRequest_in, request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/consent/request/id/{id:path}", response_model=ConsentRequestOut, status_code=201)
+async def consentRequestHistoryItemId(request: Request, db: Session = Depends(get_db),id: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    consentRequest_in= ConsentRequestGETIN(itemId=id,itemType="")
+    response_data=getconsentRequestHistoryItemId(payload,consentRequest_in, request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
 
 @app.get("/seedor/1.0/consent/offered/{id}", response_model=ConsentRequestOut, status_code=201)
 async def consentGetOfferedId(request: Request, db: Session = Depends(get_db),id: str = Path(...,min_length=3,max_length=200)):
@@ -617,6 +642,42 @@ async def shipmenttrackingGet(request: Request, db: Session = Depends(get_db),co
     return response
 
 #------- shipmenttracking block ends -------------
+
+@app.post("/seedor/1.0/load-countries")
+async def load_countries(request: Request,db: Session = Depends(get_db)):
+      verify_basic_auth(manual_basic_auth(request))
+      # Rate limit check (basic)
+      #check_rate_limit(request)
+      response_data=insert_countries(db)
+      token=""    
+      response = JSONResponse(status_code=200, content=response_data.dict())
+      response.headers["X-Access-Token"] = token
+      return response
+
+@app.post("/seedor/1.0/load-states")
+async def load_states(request: Request,db: Session = Depends(get_db)):
+      verify_basic_auth(manual_basic_auth(request))
+      # Rate limit check (basic)
+      #check_rate_limit(request)
+      response_data=insert_states(db)
+      token=""    
+      response = JSONResponse(status_code=200, content=response_data.dict())
+      response.headers["X-Access-Token"] = token
+      return response
+
+@app.get("/seedor/1.0/load/address")
+async def load_validate_address(lovAddressIn: LovAddressIn,request: Request,db: Session = Depends(get_db)):
+    #   verify_basic_auth(manual_basic_auth(request))
+      # Rate limit check (basic)
+      #check_rate_limit(request)
+      token=get_bearer_token(request)
+      payload=verify_access_token(token)
+      
+      response_data=lookup_zip(lovAddressIn)
+      token=""    
+      response = JSONResponse(status_code=200, content=response_data)
+      response.headers["X-Access-Token"] = token
+      return response
 
 # Health check
 @app.get("/seedor/1.0/health")

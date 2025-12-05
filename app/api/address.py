@@ -232,9 +232,9 @@ def deleteAddress(payload: dict,address_in: AddressDeleteIN, request: Request, d
         response_data.addressId=new_Address.addressId
         response_data.isActive=new_Address.isActive
         response_data.statuscode="SUCCESS"
-        response_data.statusmessage="Address Updated Successfully"
+        response_data.statusmessage="Address Deleted Successfully"
     except IntegrityError as e:            
         db.rollback()
-        raise HTTPException(status_code=400, detail="Address Update Failed")        
+        raise HTTPException(status_code=400, detail="Address Delete Failed")        
 
     return response_data

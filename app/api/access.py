@@ -27,12 +27,18 @@ def grandAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Sess
         statusmessage="Invalid Access Object"  
     )    
 
-    tmp_count= db.query(func.count(Access.idaccess)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()
-    if tmp_count==0:
-        tmp_count=1
-    else:
-        tmp_count=tmp_count+1
+    tmp_access= db.query(Access).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).order_by(Access.seqCounter.desc()).first()
     
+    if not tmp_access or tmp_access.seqCounter==0:
+        raise HTTPException(status_code=400, detail="No Access Found")          
+    
+    if tmp_access and tmp_access.accessTypeValue!=access_in.accessTypeValue :
+        raise HTTPException(status_code=400, detail="Access Type Mismatch")    
+
+    if tmp_access and tmp_access.accessTypeValue==access_in.accessTypeValue and  tmp_access.accessStatus=="PUBLIC":
+        raise HTTPException(status_code=400, detail="Access Already Public")
+   
+    tmp_count = (tmp_access.seqCounter if tmp_access else 0) + 1
     new_Access=Access(
         idUser=userId,
         accessTypeId=access_in.accessTypeId,
@@ -71,11 +77,18 @@ def revokeAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Ses
         statusmessage="Invalid Access Object"  
     )    
 
-    tmp_count= db.query(func.count(Access.idaccess)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()
-    if not tmp_count or tmp_count==0:
-        raise HTTPException(status_code=400, detail="No Access Grand to Revoke")          
-    else:
-        tmp_count=tmp_count+1
+    tmp_access= db.query(Access).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).order_by(Access.seqCounter.desc()).first()
+    if not tmp_access or tmp_access.seqCounter==0:
+        raise HTTPException(status_code=400, detail="No Access Found")          
+    
+    if tmp_access and tmp_access.accessTypeValue!=access_in.accessTypeValue :
+        raise HTTPException(status_code=400, detail="Access Type Mismatch")
+    
+    if tmp_access and tmp_access.accessStatus=="PRIVATE":
+        raise HTTPException(status_code=400, detail="Access Already Public")
+    
+    
+    tmp_count = (tmp_access.seqCounter if tmp_access else 0) + 1
     
     new_Access=Access(
         idUser=userId,

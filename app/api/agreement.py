@@ -156,7 +156,7 @@ def getAgreementAll(payload: dict, request: Request, db: Session = Depends(get_d
         summary= tmpAgreement.summary,
         content= tmpAgreement.content,
         details=tmpAgreement.details,
-        isActive=True            
+        isActive=tmpAgreement.isActive            
         )                
         agreement_listOut.listAgreement.append(tmp_agreementBase)
 

@@ -33,6 +33,8 @@ class Settings(BaseModel):
     BASIC_AUTH_PASSWORD:str
     BASIC_AUTH_HASH_PASSWORD:str
 
+    REST_COUNTRIES_API_URL: str
+    REST_COUNTRIES_STATES_API_URL: str
 
 def load_properties(filepath: str) -> Settings:
     """Load key=value pairs from server.properties."""

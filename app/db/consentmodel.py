@@ -35,6 +35,7 @@ class ConsentRequest(Base):
     itemId=Column(String(100), nullable=False)    
     status=Column(String(100), nullable=False)  
     seqCounter=Column(Integer, nullable=False)
+    consentValididtyFrequency=Column(String(100), nullable=True)
     requestedBy=Column(Integer, nullable=False)
     requestedTo=Column(Integer, nullable=False)
     createdBy = Column(String(45),default='SEEDOR',nullable=False)
