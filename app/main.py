@@ -266,9 +266,6 @@ async def accessGetHistoryAll(request: Request, db: Session = Depends(get_db)):
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
     return response
-
-
-
 #------- access block ends -------------
 
 #------- address block started -------------

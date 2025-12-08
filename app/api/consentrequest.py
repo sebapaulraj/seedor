@@ -52,7 +52,8 @@ def createConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         status="",
         consentValididtyFrequency="",
         requestedBy="",
-        requestedTo="",        
+        requestedTo="", 
+        seqCounter=0,       
         isactiveConnection=False,
         consentSendStatus="User Not Online",
         statuscode="ERROR",
@@ -92,11 +93,8 @@ def createConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         ConsentRequest.itemBeneficiaryIdUser == profile.authIduser).filter(
         ConsentRequest.itemId==consentReq_in.itemId).scalar()  
       
-    if not tmp_seq or  tmp_seq==0:
-        tmp_seq=1
-    else:
-        tmp_seq=tmp_seq+1
-    
+    tmp_seq = 1 if not tmp_seq or tmp_seq == 0 else tmp_seq + 1
+
     new_consentRequest=ConsentRequest(
         itemOwnerIdUser =profile.authIduser ,    
         itemBeneficiaryIdUser = userId,
@@ -124,6 +122,7 @@ def createConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         response_data.consentValididtyFrequency=new_consentRequest.consentValididtyFrequency
         response_data.requestedBy=new_consentRequest.requestedBy
         response_data.requestedTo=new_consentRequest.requestedTo
+        response_data.seqCounter=new_consentRequest.seqCounter
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Consent Request Raised Successfully"
     
@@ -148,7 +147,8 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         status="",
         consentValididtyFrequency="",
         requestedBy="",
-        requestedTo="",       
+        requestedTo="",
+        seqCounter=0,       
         isactiveConnection=False,
         consentSendStatus="User Not Online",       
         statuscode="ERROR",
@@ -185,10 +185,7 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         ConsentRequest.itemOwnerIdUser == userId).filter(
         ConsentRequest.itemId==consentReq_in.itemId).scalar()  
       
-    if not tmp_seq or  tmp_seq==0:
-        tmp_seq=1
-    else:
-        tmp_seq=tmp_seq+1
+    tmp_seq = 1 if not tmp_seq or tmp_seq == 0 else tmp_seq + 1
     
     new_consentRequest=ConsentRequest(
         itemOwnerIdUser=userId ,    
@@ -216,7 +213,8 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         response_data.status=new_consentRequest.status   
         response_data.consentValididtyFrequency=new_consentRequest.consentValididtyFrequency 
         response_data.requestedBy=new_consentRequest.requestedBy
-        response_data.requestedTo=new_consentRequest.requestedTo  
+        response_data.requestedTo=new_consentRequest.requestedTo 
+        response_data.seqCounter=new_consentRequest.seqCounter 
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Consent Request Raised Successfully"
     
@@ -242,6 +240,7 @@ def acceptConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         consentValididtyFrequency="",
         requestedBy="",
         requestedTo="",
+        seqCounter=0,
         isactiveConnection=False,
         consentSendStatus="User not Active",        
         statuscode="ERROR",
@@ -259,11 +258,9 @@ def acceptConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         ConsentRequest.itemOwnerIdUser ==  profile.authIduser).filter(
         ConsentRequest.itemBeneficiaryIdUser == userId  ).filter(
         ConsentRequest.itemId==consentReq_in.itemId).scalar()    
-    if not tmp_seq or tmp_seq==0:
-        tmp_seq=1
-    else:
-        tmp_seq=tmp_seq+1
     
+    tmp_seq = 1 if not tmp_seq or tmp_seq == 0 else tmp_seq + 1
+
     new_consentRequest=ConsentRequest(
         itemOwnerIdUser=profile.authIduser ,    
         itemBeneficiaryIdUser = userId,
@@ -291,6 +288,7 @@ def acceptConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         response_data.status=new_consentRequest.status
         response_data.requestedBy=new_consentRequest.requestedBy
         response_data.requestedTo=new_consentRequest.requestedTo
+        response_data.seqCounter=new_consentRequest.seqCounter
         response_data.consentValididtyFrequency=new_consentRequest.consentValididtyFrequency            
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Consent Grand Successfully"
@@ -319,6 +317,7 @@ def acceptConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         consentValididtyFrequency="",      
         requestedBy="",
         requestedTo="",
+        seqCounter=0,
         isactiveConnection=False,
         consentSendStatus="User not Active",
         updatedDate="",
@@ -335,11 +334,9 @@ def acceptConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
     tmp_seq= db.query(func.max(ConsentRequest.seqCounter)).filter(
         ConsentRequest.itemOwnerIdUser == userId ).filter(
         ConsentRequest.itemBeneficiaryIdUser == profile.authIduser ).filter(
-        ConsentRequest.itemId==consentReq_in.itemId).scalar()    
-    if not tmp_seq or tmp_seq==0:
-        tmp_seq=1
-    else:
-        tmp_seq=tmp_seq+1
+        ConsentRequest.itemId==consentReq_in.itemId).scalar()   
+     
+    tmp_seq = 1 if not tmp_seq or tmp_seq == 0 else tmp_seq + 1
     
     new_consentRequest=ConsentRequest(
         itemOwnerIdUser = userId,    
@@ -367,6 +364,7 @@ def acceptConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         response_data.status=new_consentRequest.status
         response_data.requestedBy=new_consentRequest.requestedBy
         response_data.requestedTo=new_consentRequest.requestedTo
+        response_data.seqCounter=new_consentRequest.seqCounter
         response_data.itemType=new_consentRequest.itemType
         response_data.consentValididtyFrequency=new_consentRequest.consentValididtyFrequency              
         response_data.statuscode="SUCCESS"
@@ -396,6 +394,7 @@ def rejectConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         consentValididtyFrequency="",
         requestedBy="",
         requestedTo="",
+        seqCounter=0,
         isactiveConnection=False,
         consentSendStatus="User not Active",      
         statuscode="ERROR",
@@ -411,11 +410,9 @@ def rejectConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
     tmp_seq= db.query(func.max(ConsentRequest.seqCounter)).filter(
         ConsentRequest.itemOwnerIdUser ==profile.authIduser ).filter(
         ConsentRequest.itemBeneficiaryIdUser == userId).filter(
-        ConsentRequest.itemId==consentReq_in.itemId).scalar()    
-    if tmp_seq==0:
-        tmp_seq=1
-    else:
-        tmp_seq=tmp_seq+1
+        ConsentRequest.itemId==consentReq_in.itemId).scalar() 
+       
+    tmp_seq = 1 if not tmp_seq or tmp_seq == 0 else tmp_seq + 1
     
     new_consentRequest=ConsentRequest(
         itemOwnerIdUser=userId,    
@@ -443,6 +440,7 @@ def rejectConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         response_data.itemType=new_consentRequest.itemType
         response_data.requestedBy=new_consentRequest.requestedBy
         response_data.requestedTo=new_consentRequest.requestedTo
+        response_data.seqCounter=new_consentRequest.seqCounter
         response_data.consentValididtyFrequency=new_consentRequest.consentValididtyFrequency       
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Consent REVOKED Successfully"
@@ -470,6 +468,7 @@ def rejectConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         consentValididtyFrequency="",
         requestedBy="",
         requestedTo="",
+        seqCounter=0,
         isactiveConnection=False,
         consentSendStatus="User not Active",
         statuscode="ERROR",
@@ -485,11 +484,9 @@ def rejectConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
     tmp_seq= db.query(func.max(ConsentRequest.seqCounter)).filter(
         ConsentRequest.itemOwnerIdUser ==userId ).filter(
         ConsentRequest.itemBeneficiaryIdUser ==  profile.authIduser).filter(
-        ConsentRequest.itemId==consentReq_in.itemId).scalar()    
-    if tmp_seq==0:
-        tmp_seq=1
-    else:
-        tmp_seq=tmp_seq+1
+        ConsentRequest.itemId==consentReq_in.itemId).scalar()   
+     
+    tmp_seq = 1 if not tmp_seq or tmp_seq == 0 else tmp_seq + 1
     
     new_consentRequest=ConsentRequest(
         itemOwnerIdUser=profile.authIduser ,    
@@ -516,6 +513,7 @@ def rejectConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         response_data.status=new_consentRequest.status 
         response_data.requestedBy=new_consentRequest.requestedBy
         response_data.requestedTo=new_consentRequest.requestedTo
+        response_data.seqCounter=new_consentRequest.seqCounter  
         response_data.itemType=new_consentRequest.itemType
         response_data.consentValididtyFrequency=new_consentRequest.consentValididtyFrequency       
         response_data.statuscode="SUCCESS"
