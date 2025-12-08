@@ -3,7 +3,7 @@ from jose import jwt
 from app.core.config import settings
 
 def create_email_token(email: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=15)
+    expire = datetime.utcnow() + timedelta(minutes=3600)
     payload = {"resetsub": email, "exp": expire}
     token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
     return token

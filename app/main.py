@@ -152,7 +152,7 @@ async def reset(password_in: Password,request: Request, db: Session = Depends(ge
     response_data=validateUserName(userName_in,request,db) 
     if response_data.statuscode=="ERROR":
         raise HTTPException(status_code=404, detail="Email not registered")   
-    userCreate_in=UserCreate("",email,password_in.password)
+    userCreate_in=UserCreate(name="SEEDOR",email=email,password=password_in.password)
     response_data= updatePassword(userCreate_in, request, db)
     response = JSONResponse(status_code=200, content=response_data.dict())
     # response.headers["X-Access-Token"] = str(token)
