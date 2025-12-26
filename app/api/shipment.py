@@ -1,3 +1,4 @@
+import datetime
 import os
 import json
 from fastapi import FastAPI, Depends, HTTPException, status, Request
@@ -24,7 +25,9 @@ def addShipment(payload: dict,shipment_in: ShipmentNewIN, request: Request, db: 
     
     response_data=ShipmentOut(
         idshipment="",
+        shipmentCode="",
         isActive=False,
+        createdDate=datetime.now(),
         statuscode="ERROR",
         statusmessage="Invalid shipment Object"  
     )    
@@ -52,7 +55,9 @@ def addShipment(payload: dict,shipment_in: ShipmentNewIN, request: Request, db: 
         db.commit()
         db.refresh(new_shipment) 
         response_data.idshipment=new_shipment.idshipment
+        response_data.shipmentCode=new_shipment.shipmentCode
         response_data.isActive=new_shipment.isActive
+        response_data.createdDate=new_shipment.createdDate
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Shipment Added Successfully"
     except IntegrityError as e:            
@@ -70,7 +75,9 @@ def updateShipment(payload: dict,shipment_in: ShipmentUpdateIN, request: Request
     
     response_data=ShipmentOut(
         idshipment="",
+        shipmentCode="",        
         isActive=False,
+        createdDate=datetime.now(),
         statuscode="ERROR",
         statusmessage="Invalid shipment "  
         )
@@ -88,7 +95,9 @@ def updateShipment(payload: dict,shipment_in: ShipmentUpdateIN, request: Request
         db.commit()
         db.refresh(new_shipment) 
         response_data.idshipment=new_shipment.idshipment
-        response_data.isActive=new_shipment.isActive
+        response_data.shipmentCode=new_shipment.shipmentCode
+        response_data.isActive=new_shipment.isActive        
+        response_data.createdDate=new_shipment.createdDate
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="shipment Updated Successfully"
     except IntegrityError as e:            

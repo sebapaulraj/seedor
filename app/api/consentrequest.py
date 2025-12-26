@@ -610,3 +610,90 @@ def getconsentRequestHistoryItemId(payload: dict,consentReq_in: ConsentRequestGE
 
     response_data=tmp_consentReq_Out
     return response_data
+
+
+def getconsentRequestBeneficiaryHistoryItemType(payload: dict,consentReq_in: ConsentRequestGETIN,  request: Request,  db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+   
+
+    consent_listOut=ConsentRequestallOUT(
+        listConsentRequest=[],
+        statuscode="ERROR",
+        statusmessage="No Consent Found" 
+        )
+
+    consent_list=db.query(ConsentRequest).filter(ConsentRequest.itemType == consentReq_in.itemType).filter(
+        ConsentRequest.itemBeneficiaryIdUser==userId).all()
+    
+    for tmpconsentRequ in consent_list: 
+         tmpconsentRequestBaseModel=ConsentRequest(
+            idconsentrequest=tmpconsentRequ.idconsentrequest,
+            itemOwnerIdUser= tmpconsentRequ.itemOwnerIdUser,  
+            itemBeneficiaryIdUser=tmpconsentRequ.itemBeneficiaryIdUser,
+            itemType=tmpconsentRequ.itemType,
+            itemId=tmpconsentRequ.itemId,
+            status=tmpconsentRequ.status,
+            consentValididtyFrequency=tmpconsentRequ.consentValididtyFrequency,
+            requestedBy=tmpconsentRequ.requestedBy,
+            requestedTo=tmpconsentRequ.requestedTo,
+            seqCounter=tmpconsentRequ.seqCounter,
+                  
+         )
+         consent_listOut.listConsentRequest.append(tmpconsentRequestBaseModel)          
+   
+    consent_listOut.statuscode="SUCCESS"
+    consent_listOut.statusmessage="Consent Found" 
+
+    response_data=consent_listOut
+
+    return response_data
+
+
+def getconsentRequestBeneficiaryHistoryItemId(payload: dict,consentReq_in: ConsentRequestGETIN,  request: Request,  db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+   
+
+    tmp_consentReq_Out=ConsentRequestOut(
+        idconsentrequest="",
+        itemOwnerIdUser="", 
+        itemBeneficiaryIdUser="",
+        itemType="",
+        itemId="",
+        status="",
+        consentValididtyFrequency="",
+        requestedBy="",
+        requestedTo="",
+        seqCounter=0,
+        isactiveConnection=False,
+        consentSendStatus="",
+        statuscode="ERROR",
+        statusmessage="No Consent Found" 
+        )
+
+    consentReq_Out=db.query(ConsentRequest).filter(ConsentRequest.itemId == consentReq_in.itemId).filter(
+        ConsentRequest.itemBeneficiaryIdUser==userId).first()
+    if consentReq_Out:
+         tmpconsentRequestBaseModel=ConsentRequestOut(
+            idconsentrequest=consentReq_Out.idconsentrequest,
+            itemOwnerIdUser= consentReq_Out.itemOwnerIdUser,  
+            itemBeneficiaryIdUser=consentReq_Out.itemBeneficiaryIdUser,
+            itemType=consentReq_Out.itemType,
+            itemId=consentReq_Out.itemId,
+            status=consentReq_Out.status,
+            consentValididtyFrequency=consentReq_Out.consentValididtyFrequency,
+            requestedBy=consentReq_Out.requestedBy,
+            requestedTo=consentReq_Out.requestedTo,
+            seqCounter=consentReq_Out.seqCounter,
+            isactiveConnection=False,
+            consentSendStatus="",
+            statuscode="SUCCESS",
+            statusmessage="Consent Found"          
+         )
+         tmp_consentReq_Out=tmpconsentRequestBaseModel   
+
+    response_data=tmp_consentReq_Out
+    return response_data

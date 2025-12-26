@@ -10,7 +10,8 @@ from app.core.config import settings
 from app.db.db import get_db, engine
 from app.db.accessmodel import Access
 from app.db.models import Base
-from app.schemas.schemas import AccessBase, AccessGetIdIN, AccessGetIdTypeIN, AccessNewIN, AccessOut, AccessGetIN,AccessGetOUT
+from app.db.usermodel import Profile
+from app.schemas.schemas import AccessBase, AccessGetIdIN, AccessGetIdTypeIN, AccessGetIdTypePublicIN, AccessNewIN, AccessOut, AccessGetIN,AccessGetOUT
 
 
 def grandAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Session = Depends(get_db)):
@@ -211,6 +212,45 @@ def getHistoryAccess(payload: dict,access_in: AccessGetIdTypeIN, request: Reques
        # tmp_seq= db.query(func.max(Access.seqCounter)).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).scalar()    
        # print(f"{access_in.accessTypeId} and {userId}")
         tmp_accesslist = db.query(Access).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).order_by(desc(Access.createdDate)).all()
+        for item_Access in tmp_accesslist:
+            tmp_AccessBase=AccessBase(
+                idaccess =item_Access.idaccess,
+                idUser=item_Access.idUser,  
+                accessTypeId=item_Access.accessTypeId,
+                accessTypeValue=item_Access.accessTypeValue,
+                accessGrantedOn=str(item_Access.accessGrantedOn),
+                accessStatus=item_Access.accessStatus,
+                seqCounter=item_Access.seqCounter
+            )
+            access_listOut.listAccess.append(tmp_AccessBase)       
+        access_listOut.statuscode="SUCCESS"
+        access_listOut.statusmessage="Access Found" 
+    
+    response_data=access_listOut
+
+    return response_data
+
+def getPublicAccess(payload: dict,accessPublic_in: AccessGetIdTypePublicIN, request: Request, db: Session = Depends(get_db)):
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+    address_list=[]
+    address=None
+
+    access_listOut=AccessGetOUT(
+        idaccess="",
+        listAccess=[],
+        seqCounter=0,
+        statuscode="ERROR",
+        statusmessage="No Access Detail" 
+        )
+    
+    if accessPublic_in.accessTypeId :
+        tmp_userprofile= db.query(Profile).filter(Profile.seedorId == accessPublic_in.seedorId).scalar()    
+        if not tmp_userprofile:
+            raise HTTPException(status_code=400, detail="No User Profile Found")  
+
+        tmp_accesslist = db.query(Access).filter(Access.idUser == tmp_userprofile.authIduser).filter(Access.accessTypeId == accessPublic_in.accessTypeId).order_by(desc(Access.createdDate)).all()
         for item_Access in tmp_accesslist:
             tmp_AccessBase=AccessBase(
                 idaccess =item_Access.idaccess,

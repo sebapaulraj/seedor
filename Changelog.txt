@@ -12,3 +12,15 @@ Address delete - response message (Deleted Successfully)
 Consent -- Request not able 
 Agreemnt -- Isactive --change
 
+24-12-2025
+++++++++++
+1. Return the ShipmentId, after creating the Shipment -- Done
+2. barcode Functionality
+3. get API for Concent Request for delivery. -- Done
+4. Date and time in shipment & shipment tracking -- Done
+5. Concern request - display public reccord given for any given seedorid --done
+6. API - Concern Request - Itemtype, need seedorid for all type of users also add created date and time
+7. Enable Attachment Seafile
+8.
+
+

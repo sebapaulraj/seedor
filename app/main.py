@@ -10,18 +10,18 @@ from sqlalchemy.exc import IntegrityError
 from pydantic import ValidationError
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.api.access import getAccessById, getHistoryAccess, getHistoryAccessAll, getTypeIdAccess,grandAccess, revokeAccess
+from app.api.access import getAccessById, getHistoryAccess, getHistoryAccessAll, getPublicAccess, getTypeIdAccess,grandAccess, revokeAccess
 from app.api.address import addAddress, deleteAddress,getAddressesAll, getAddressesId, updateAddress
 from app.api.agreement import addAgreement, deleteAgreement,getAgreementAll, getAgreementId, updateAgreement
 from app.core.config import settings
 from app.api.consent import   getConsentOfferdAll, getConsentOfferdId,  getConsentSignedAll, getConsentSignedId
-from app.api.consentrequest import acceptConsentOffer, acceptConsentRequest, createConsentOffer, createConsentRequest, getconsentRequestHistoryItemId, getconsentRequestHistoryItemType,rejectConsentOffer, rejectConsentRequest
+from app.api.consentrequest import acceptConsentOffer, acceptConsentRequest, createConsentOffer, createConsentRequest, getconsentRequestBeneficiaryHistoryItemId, getconsentRequestBeneficiaryHistoryItemType, getconsentRequestHistoryItemId, getconsentRequestHistoryItemType,rejectConsentOffer, rejectConsentRequest
 from app.db.db import get_db, engine
 from app.db.usermodel import User,Profile
 from app.db.mastermodel import Lov
 from app.db.models import Base
 from app.schemas.consentschema import ConsentGetIN, ConsentGetOUT, ConsentRequestGETIN, ConsentRequestNewIN, ConsentRequestOut, ConsentUpdateIN
-from app.schemas.schemas import AccessGetIdIN, AccessGetIdTypeIN, AccessNewIN, AccessOut, AddressDeleteIN, AddressGetIN, AddressGetOUT, AddressNewIN, AddressOut, AddressUpdateIN, AgreementDeleteIN, AgreementGetIN, AgreementNewIN, AgreementOut, AgreementUpdateIN, LovAddressIn, Password,ShipmentNewIN, ShipmentOut, ShipmentUpdateIN, ShipmenttrackingGetIN, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingUpdateIN, UserCreate, UserOut,LoginUser,LoginOut,LovOut,LovIn,UserName,UserNameOut,UserProfile,UserProfileOut,ValidateSeedorId,ValidateSeedorIdOut
+from app.schemas.schemas import AccessGetIdIN, AccessGetIdTypeIN, AccessGetIdTypePublicIN, AccessNewIN, AccessOut, AddressDeleteIN, AddressGetIN, AddressGetOUT, AddressNewIN, AddressOut, AddressUpdateIN, AgreementDeleteIN, AgreementGetIN, AgreementNewIN, AgreementOut, AgreementUpdateIN, LovAddressIn, Password,ShipmentNewIN, ShipmentOut, ShipmentUpdateIN, ShipmenttrackingGetIN, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingUpdateIN, UserCreate, UserOut,LoginUser,LoginOut,LovOut,LovIn,UserName,UserNameOut,UserProfile,UserProfileOut,ValidateSeedorId,ValidateSeedorIdOut
 from app.api.auth import create_access_token,verify_access_token,get_bearer_token,manual_basic_auth,verify_basic_auth
 from app.core.rate_limit import check_rate_limit
 from email_validator import validate_email, EmailNotValidError
@@ -252,6 +252,18 @@ async def accessGetHistory(request: Request, db: Session = Depends(get_db),type:
     payload=verify_access_token(token)
     access_in= AccessGetIdTypeIN(accessTypeId=type)
     response_data=getHistoryAccess(payload,access_in, request, db)
+    response = JSONResponse(status_code=200, content=response_data.dict())
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/access/public/{seedorId}/{typeId}", response_model=AccessOut, status_code=201)
+async def accessGetHistory(request: Request, db: Session = Depends(get_db),seedorId: str = Path(...,min_length=3,max_length=200),typeId: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    accessPublic_in= AccessGetIdTypePublicIN(accessTypeId=typeId,seedorId=seedorId)
+    response_data=getPublicAccess(payload,accessPublic_in, request, db)
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
     return response
@@ -492,6 +504,32 @@ async def consentRequestHistoryItemId(request: Request, db: Session = Depends(ge
     response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
+
+
+@app.get("/seedor/1.0/consent/req/beneficiary/type/{itemType:path}", response_model=ConsentRequestOut, status_code=201)
+async def consentRequestHistoryItemType(request: Request, db: Session = Depends(get_db),itemType: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    consentRequest_in= ConsentRequestGETIN(itemType=itemType,itemId="")
+    response_data=getconsentRequestBeneficiaryHistoryItemType(payload,consentRequest_in, request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/consent/req/beneficiary/id/{id:path}", response_model=ConsentRequestOut, status_code=201)
+async def consentRequestHistoryItemId(request: Request, db: Session = Depends(get_db),id: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    consentRequest_in= ConsentRequestGETIN(itemId=id,itemType="")
+    response_data=getconsentRequestBeneficiaryHistoryItemId(payload,consentRequest_in, request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
 
 
 @app.get("/seedor/1.0/consent/offered/{id}", response_model=ConsentRequestOut, status_code=201)

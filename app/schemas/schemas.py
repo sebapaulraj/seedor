@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, constr, Field
 from typing import List, Optional
 from app.db.accessmodel import Access
@@ -215,6 +216,11 @@ class AccessGetIdIN(BaseModel):
 class AccessGetIdTypeIN(BaseModel):
     accessTypeId:str   =Field(min_length=3, max_length=45)
     
+
+class AccessGetIdTypePublicIN(BaseModel):
+    accessTypeId:str   =Field(min_length=3, max_length=45)
+    seedorId:str   =Field(min_length=3, max_length=250)
+    
 class AccessGetIN(BaseModel):
     idaccess:str =Field(min_length=3, max_length=45)
    
@@ -283,7 +289,8 @@ class ShipmentBase(BaseModel):
     description:str
     deliveryId:str
     isActive:bool
-   
+    createdDate:datetime
+
 class ShipmentNewIN(BaseModel):
     agencySeedorId:str
     deliverySeedorId:str 
@@ -292,9 +299,12 @@ class ShipmentNewIN(BaseModel):
 
 class ShipmentOut(BaseModel):
     idshipment:str
+    shipmentCode:str
     isActive:bool
+    createdDate:datetime 
     statuscode:str
-    statusmessage:str 
+    statusmessage:str
+    
 
 class ShipmentUpdateIN(BaseModel):
     idshipment:str =Field(min_length=3, max_length=45)
@@ -324,6 +334,7 @@ class ShipmenttrackingBase(BaseModel):
     shipmentTransitDetail:str
     isActive:bool
     seqNumber:int
+    createdDate:datetime 
       
 
 class ShipmenttrackingNewIN(BaseModel):   
@@ -339,6 +350,7 @@ class ShipmenttrackingOut(BaseModel):
     idshipmenttracking:str
     shipmentCode:str
     isActive:bool
+    createdDate:datetime 
     statuscode:str
     statusmessage:str 
 

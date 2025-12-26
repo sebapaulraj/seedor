@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import json
 from fastapi import FastAPI, Depends, HTTPException, status, Request
@@ -22,6 +23,7 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
         idshipmenttracking="",
         shipmentCode="",
         isActive=False,
+        createdDate=datetime.now(),
         statuscode="ERROR",
         statusmessage="Invalid Shipment Tracking Object"  
     )    
@@ -34,7 +36,7 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
         shipmenttrackingcontent=shipmenttracking_in.shipmenttrackingcontent,
         shipmentTransitSummary=shipmenttracking_in.shipmentTransitSummary,
         shipmentTransitDetail=shipmenttracking_in.shipmentTransitDetail,
-        isActive=True,
+        isActive=True,        
         createdBy = userId,
         updatedBy = userId    
     )
@@ -45,7 +47,8 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
         db.refresh(new_Shipmenttracking) 
         response_data.idshipmenttracking=new_Shipmenttracking.idshipmenttracking
         response_data.shipmentCode=new_Shipmenttracking.shipmentCode
-        response_data.isActive=new_Shipmenttracking.isActive       
+        response_data.isActive=new_Shipmenttracking.isActive
+        response_data.createdDate=new_Shipmenttracking.createdDate       
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Shipment Tracking Added Successfully"
     except IntegrityError as e:            
@@ -64,6 +67,7 @@ def updateShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingUp
         idshipmenttracking="",
         shipmentCode="",
         isActive=False,
+        createdDate=datetime.now(),
         statuscode="ERROR",
         statusmessage="Invalid Shipment Tracking Object"  
     )    
@@ -87,7 +91,8 @@ def updateShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingUp
         db.refresh(new_Shipmenttracking) 
         response_data.idshipmenttracking=new_Shipmenttracking.idshipmenttracking
         response_data.shipmentCode=new_Shipmenttracking.shipmentCode
-        response_data.isActive=new_Shipmenttracking.isActive       
+        response_data.isActive=new_Shipmenttracking.isActive
+        response_data.createdDate=new_Shipmenttracking.createdDate       
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Shipment Tracking Updated Successfully"
     except IntegrityError as e:            
@@ -113,7 +118,8 @@ def getShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingGetIN
     if shipmenttracking_in.shipmentCode :
         shipmenttracking_list=db.query(Shipmenttracking).filter(Shipmenttracking.shipmentCode == shipmenttracking_in.shipmentCode).all()
         shipmenttracking_listOut.shipmentCode =shipmenttracking_in.shipmentCode
-        for tmpShipmenttracking in shipmenttracking_list:            
+        for tmpShipmenttracking in shipmenttracking_list: 
+          shipmenttracking_listOut.listShipmenttracking.append(tmpShipmenttracking)
             shipmenttracking_listOut.listShipmenttracking.append(tmpShipmenttracking)
         shipmenttracking_listOut.statuscode="SUCCESS"
         shipmenttracking_listOut.statusmessage="Shipment Tracking Found" 
