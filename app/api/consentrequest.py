@@ -542,10 +542,12 @@ def getconsentRequestHistoryItemType(payload: dict,consentReq_in: ConsentRequest
         ConsentRequest.itemOwnerIdUser==userId).all()
     
     for tmpconsentRequ in consent_list: 
+         tmp_OwnerProfile=db.query(Profile).filter(Profile.authIduser==tmpconsentRequ.itemOwnerIdUser).first()
+         tmp_BeneficiaryProfile=db.query(Profile).filter(Profile.authIduser==tmpconsentRequ.itemBeneficiaryIdUser).first()
          tmpconsentRequestBaseModel=ConsentRequest(
             idconsentrequest=tmpconsentRequ.idconsentrequest,
-            itemOwnerIdUser= tmpconsentRequ.itemOwnerIdUser,  
-            itemBeneficiaryIdUser=tmpconsentRequ.itemBeneficiaryIdUser,
+            itemOwnerIdUser= tmp_OwnerProfile.seedorId,  
+            itemBeneficiaryIdUser=tmp_BeneficiaryProfile.seedorId,
             itemType=tmpconsentRequ.itemType,
             itemId=tmpconsentRequ.itemId,
             status=tmpconsentRequ.status,
@@ -590,10 +592,12 @@ def getconsentRequestHistoryItemId(payload: dict,consentReq_in: ConsentRequestGE
     consentReq_Out=db.query(ConsentRequest).filter(ConsentRequest.itemId == consentReq_in.itemId).filter(
         ConsentRequest.itemOwnerIdUser==userId).first()
     if consentReq_Out:
+         tmp_OwnerProfile=db.query(Profile).filter(Profile.authIduser==consentReq_Out.itemOwnerIdUser).first()
+         tmp_BeneficiaryProfile=db.query(Profile).filter(Profile.authIduser==consentReq_Out.itemBeneficiaryIdUser).first()
          tmpconsentRequestBaseModel=ConsentRequestOut(
             idconsentrequest=consentReq_Out.idconsentrequest,
-            itemOwnerIdUser= consentReq_Out.itemOwnerIdUser,  
-            itemBeneficiaryIdUser=consentReq_Out.itemBeneficiaryIdUser,
+            itemOwnerIdUser= tmp_OwnerProfile.seedorId,  
+            itemBeneficiaryIdUser=tmp_BeneficiaryProfile.seedorId,
             itemType=consentReq_Out.itemType,
             itemId=consentReq_Out.itemId,
             status=consentReq_Out.status,
@@ -628,10 +632,12 @@ def getconsentRequestBeneficiaryHistoryItemType(payload: dict,consentReq_in: Con
         ConsentRequest.itemBeneficiaryIdUser==userId).all()
     
     for tmpconsentRequ in consent_list: 
+         tmp_OwnerProfile=db.query(Profile).filter(Profile.authIduser==tmpconsentRequ.itemOwnerIdUser).first()
+         tmp_BeneficiaryProfile=db.query(Profile).filter(Profile.authIduser==tmpconsentRequ.itemBeneficiaryIdUser).first()
          tmpconsentRequestBaseModel=ConsentRequest(
             idconsentrequest=tmpconsentRequ.idconsentrequest,
-            itemOwnerIdUser= tmpconsentRequ.itemOwnerIdUser,  
-            itemBeneficiaryIdUser=tmpconsentRequ.itemBeneficiaryIdUser,
+            itemOwnerIdUser= tmp_OwnerProfile.seedorId,  
+            itemBeneficiaryIdUser=tmp_BeneficiaryProfile.seedorId,
             itemType=tmpconsentRequ.itemType,
             itemId=tmpconsentRequ.itemId,
             status=tmpconsentRequ.status,
@@ -677,10 +683,12 @@ def getconsentRequestBeneficiaryHistoryItemId(payload: dict,consentReq_in: Conse
     consentReq_Out=db.query(ConsentRequest).filter(ConsentRequest.itemId == consentReq_in.itemId).filter(
         ConsentRequest.itemBeneficiaryIdUser==userId).first()
     if consentReq_Out:
+         tmp_OwnerProfile=db.query(Profile).filter(Profile.authIduser==consentReq_Out.itemOwnerIdUser).first()
+         tmp_BeneficiaryProfile=db.query(Profile).filter(Profile.authIduser==consentReq_Out.itemBeneficiaryIdUser).first()
          tmpconsentRequestBaseModel=ConsentRequestOut(
             idconsentrequest=consentReq_Out.idconsentrequest,
-            itemOwnerIdUser= consentReq_Out.itemOwnerIdUser,  
-            itemBeneficiaryIdUser=consentReq_Out.itemBeneficiaryIdUser,
+            itemOwnerIdUser= tmp_OwnerProfile.seedorId,  
+            itemBeneficiaryIdUser=tmp_BeneficiaryProfile.seedorId,
             itemType=consentReq_Out.itemType,
             itemId=consentReq_Out.itemId,
             status=consentReq_Out.status,
