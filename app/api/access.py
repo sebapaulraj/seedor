@@ -245,12 +245,33 @@ def getPublicAccess(payload: dict,accessPublic_in: AccessGetIdTypePublicIN, requ
         statusmessage="No Access Detail" 
         )
     
-    if accessPublic_in.accessTypeId :
+    if accessPublic_in.accessTypeValue :
         tmp_userprofile= db.query(Profile).filter(Profile.seedorId == accessPublic_in.seedorId).scalar()    
         if not tmp_userprofile:
             raise HTTPException(status_code=400, detail="No User Profile Found")  
+        
+        subq = (
+            db.query(
+                Access.accessTypeId,
+                func.max(Access.seqCounter).label("max_seqCounter")
+            )
+            .filter(
+                Access.accessTypeValue == accessPublic_in.accessTypeValue,
+                Access.idUser == tmp_userprofile.authIduser,
+                Access.accessStatus == "PUBLIC"
+            )
+            .group_by(Access.accessTypeId)
+            .subquery()
+            )
 
-        tmp_accesslist = db.query(Access).filter(Access.idUser == tmp_userprofile.authIduser).filter(Access.accessTypeId == accessPublic_in.accessTypeId).order_by(desc(Access.createdDate)).all()
+        query = (
+            db.query(Access)
+            .join(subq, (Access.accessTypeId == subq.c.accessTypeId) &
+                        (Access.seqCounter == subq.c.max_seqCounter))
+            )
+
+        tmp_accesslist=query.all() 
+        #tmp_accesslist = db.query(Access).filter(Access.idUser == tmp_userprofile.authIduser).filter(Access.accessTypeValue == accessPublic_in.accessTypeValue).filter(Access.accessStatus == "PUBLIC").order_by(desc(Access.createdDate)).all()
         for item_Access in tmp_accesslist:
             tmp_AccessBase=AccessBase(
                 idaccess =item_Access.idaccess,

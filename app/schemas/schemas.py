@@ -218,7 +218,7 @@ class AccessGetIdTypeIN(BaseModel):
     
 
 class AccessGetIdTypePublicIN(BaseModel):
-    accessTypeId:str   =Field(min_length=3, max_length=45)
+    accessTypeValue:str   =Field(min_length=3, max_length=250)
     seedorId:str   =Field(min_length=3, max_length=250)
     
 class AccessGetIN(BaseModel):

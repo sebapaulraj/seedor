@@ -15,7 +15,7 @@ Agreemnt -- Isactive --change
 24-12-2025
 ++++++++++
 1. Return the ShipmentId, after creating the Shipment -- Done
-2. barcode Functionality
+2. barcode Functionality - Only for front end
 3. get API for Concent Request for delivery. -- Done
 4. Date and time in shipment & shipment tracking -- Done
 5. Concern request - display public reccord given for any given seedorid --done

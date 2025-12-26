@@ -118,9 +118,8 @@ def getShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingGetIN
     if shipmenttracking_in.shipmentCode :
         shipmenttracking_list=db.query(Shipmenttracking).filter(Shipmenttracking.shipmentCode == shipmenttracking_in.shipmentCode).all()
         shipmenttracking_listOut.shipmentCode =shipmenttracking_in.shipmentCode
-        for tmpShipmenttracking in shipmenttracking_list: 
+        for tmpShipmenttracking in shipmenttracking_list:           
           shipmenttracking_listOut.listShipmenttracking.append(tmpShipmenttracking)
-            shipmenttracking_listOut.listShipmenttracking.append(tmpShipmenttracking)
         shipmenttracking_listOut.statuscode="SUCCESS"
         shipmenttracking_listOut.statusmessage="Shipment Tracking Found" 
 

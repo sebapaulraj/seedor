@@ -256,13 +256,13 @@ async def accessGetHistory(request: Request, db: Session = Depends(get_db),type:
     response.headers["X-Access-Token"] = str(token)
     return response
 
-@app.get("/seedor/1.0/access/public/{seedorId}/{typeId}", response_model=AccessOut, status_code=201)
-async def accessGetHistory(request: Request, db: Session = Depends(get_db),seedorId: str = Path(...,min_length=3,max_length=200),typeId: str = Path(...,min_length=3,max_length=200)):
+@app.get("/seedor/1.0/access/public/{seedorId}/{typeValue}", response_model=AccessOut, status_code=201)
+async def accessGetHistory(request: Request, db: Session = Depends(get_db),seedorId: str = Path(...,min_length=3,max_length=200),typeValue: str = Path(...,min_length=3,max_length=200)):
     # Rate limit check (basic)
     #check_rate_limit(request)
     token=get_bearer_token(request)
     payload=verify_access_token(token)
-    accessPublic_in= AccessGetIdTypePublicIN(accessTypeId=typeId,seedorId=seedorId)
+    accessPublic_in= AccessGetIdTypePublicIN(accessTypeValue=typeValue,seedorId=seedorId)
     response_data=getPublicAccess(payload,accessPublic_in, request, db)
     response = JSONResponse(status_code=200, content=response_data.dict())
     response.headers["X-Access-Token"] = str(token)
@@ -589,7 +589,7 @@ async def shipmentAdd(shipment_in: ShipmentNewIN, request: Request, db: Session 
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=addShipment(payload,shipment_in, request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
@@ -600,9 +600,9 @@ async def shipmentUpdate(shipment_in: ShipmentUpdateIN, request: Request, db: Se
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=updateShipment(payload,shipment_in, request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
-    return response
+    return response 
 
 @app.get("/seedor/1.0/shipment/agent", response_model=ShipmenttrackingOut, status_code=201)
 async def shipmentGetAgent(request: Request, db: Session = Depends(get_db)):
@@ -649,7 +649,7 @@ async def shipmenttrackingAdd(shipmenttracking_in: ShipmenttrackingNewIN, reques
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=addShipmenttracking(payload,shipmenttracking_in, request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
@@ -660,7 +660,7 @@ async def shipmenttrackingUpdate(shipmenttracking_in: ShipmenttrackingUpdateIN, 
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=updateShipmenttracking(payload,shipmenttracking_in, request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
@@ -672,7 +672,7 @@ async def shipmenttrackingGet(request: Request, db: Session = Depends(get_db),co
     payload=verify_access_token(token)
     shipmenttracking_in=ShipmenttrackingGetIN(shipmentCode=code)
     response_data=getShipmenttracking(payload,shipmenttracking_in, request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
