@@ -611,7 +611,7 @@ async def shipmentGetAgent(request: Request, db: Session = Depends(get_db)):
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=getShipmentAgent(payload,request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
@@ -622,7 +622,7 @@ async def shipmentGetDelivery(request: Request, db: Session = Depends(get_db)):
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=getShipmentDelivery(payload,request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
@@ -633,7 +633,7 @@ async def shipmentGetShipper(request: Request, db: Session = Depends(get_db)):
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=getShipmentShipper(payload,request, db)
-    response = JSONResponse(status_code=200, content=response_data.dict())
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
 
