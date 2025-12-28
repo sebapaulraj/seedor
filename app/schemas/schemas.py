@@ -281,7 +281,9 @@ class AgreementGetOUT(BaseModel):
 #----------Shipment -------------#
 
 class ShipmentBase(BaseModel):
-    shipmentCode:str  
+    idshipment:str
+    shipmentCode:str 
+    agencyId : str 
     agencyId : str
     label : str
     shipperId:str
@@ -290,6 +292,7 @@ class ShipmentBase(BaseModel):
     deliveryId:str
     isActive:bool
     createdDate:datetime
+
 
 class ShipmentNewIN(BaseModel):
     agencySeedorId:str

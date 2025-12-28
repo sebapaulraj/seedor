@@ -85,8 +85,13 @@ def updateShipment(payload: dict,shipment_in: ShipmentUpdateIN, request: Request
     new_shipment = db.query(Shipment).filter(Shipment.idshipment == shipment_in.idshipment).first()   
     if not new_shipment:
         raise HTTPException(status_code=404, detail="shipment not found")
-    agencyUser=db.query(Profile).filter(Profile.seedorId == shipment_in.agencySeedorId).first()   
+    agencyUser=db.query(Profile).filter(Profile.seedorId == shipment_in.agencySeedorId).first() 
+    if not agencyUser:  
+        raise HTTPException(status_code=400, detail="Invalid Agency SeedorId")
     deliveryUser=db.query(Profile).filter(Profile.seedorId == shipment_in.deliverySeedorId).first()
+    if not deliveryUser:  
+        raise HTTPException(status_code=400, detail="Invalid Delivery SeedorId")
+    
     new_shipment.agencyId=agencyUser.authIduser if agencyUser else new_shipment.agencyId,     
     new_shipment.deliveryId=deliveryUser.authIduser if deliveryUser else new_shipment.deliveryId,
     new_shipment.description=shipment_in.description if shipment_in.description else new_shipment.description,    
@@ -119,9 +124,29 @@ def getShipmentAgent(payload: dict,request: Request, db: Session = Depends(get_d
         statusmessage="No Shipment Tracking Found" 
         )
 
-    shipmenttracking_list=db.query(Shipment).filter(Shipment.agencyId == userId).all()
-    for tmp_Shipment in shipmenttracking_list:            
-        shipment_listOut.listShipment.append(tmp_Shipment)
+    shipmenttracking_list=db.query(Shipment).filter(Shipment.agencyId == userId).order_by(Shipment.createdDate.desc()).all()
+    agencyUser=db.query(Profile).filter(Profile.authIduser == userId).first()
+    for tmp_Shipment in shipmenttracking_list: 
+        shipperUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.shipperId).first() 
+        shipperUserseedorId=shipperUser.seedorId if shipperUser else "SEEDOR"  
+        deliveryUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.deliveryId).first() 
+        deliveryUserseedorId=deliveryUser.seedorId if deliveryUser else "SEEDOR"  
+        cur_Shipment=Shipment(
+            idshipment=tmp_Shipment.idshipment,
+            shipmentCode=tmp_Shipment.shipmentCode,
+            agencyId=agencyUser.seedorId,
+            label=tmp_Shipment.label,
+            shipperId=shipperUserseedorId,
+            shipperName=tmp_Shipment.shipperName,
+            description=tmp_Shipment.description,
+            deliveryId=deliveryUserseedorId,
+            isActive=tmp_Shipment.isActive,
+            createdBy=tmp_Shipment.createdBy,
+            createdDate=tmp_Shipment.createdDate,
+            updatedBy=tmp_Shipment.updatedBy,
+            updatedDate=tmp_Shipment.updatedDate    
+        )            
+        shipment_listOut.listShipment.append(cur_Shipment)
     shipment_listOut.statuscode="SUCCESS"
     shipment_listOut.statusmessage="Shipment Tracking Found" 
 
@@ -143,9 +168,29 @@ def getShipmentDelivery(payload: dict,request: Request, db: Session = Depends(ge
         statusmessage="No Shipment Tracking Found" 
         )
 
-    shipmenttracking_list=db.query(Shipment).filter(Shipment.deliveryId == userId).all()
-    for tmp_Shipment in shipmenttracking_list:            
-        shipment_listOut.listShipment.append(tmp_Shipment)
+    shipmenttracking_list=db.query(Shipment).filter(Shipment.deliveryId == userId).order_by(Shipment.createdDate.desc()).all()
+    deliveryUser=db.query(Profile).filter(Profile.authIduser == userId).first()
+    for tmp_Shipment in shipmenttracking_list:
+        agencyUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.agencyId).first()
+        agencyUserseedorId=agencyUser.seedorId if agencyUser else "SEEDOR"
+        shipperUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.shipperId).first()
+        shipperUserseedorId=shipperUser.seedorId if shipperUser else "SEEDOR"
+        cur_Shipment=Shipment(
+            idshipment=tmp_Shipment.idshipment,
+            shipmentCode=tmp_Shipment.shipmentCode,
+            agencyId=agencyUserseedorId,
+            label=tmp_Shipment.label,
+            shipperId=shipperUserseedorId,
+            shipperName=tmp_Shipment.shipperName,
+            description=tmp_Shipment.description,
+            deliveryId=deliveryUser.seedorId,
+            isActive=tmp_Shipment.isActive,
+            createdBy=tmp_Shipment.createdBy,
+            createdDate=tmp_Shipment.createdDate,
+            updatedBy=tmp_Shipment.updatedBy,
+            updatedDate=tmp_Shipment.updatedDate    
+        )                
+        shipment_listOut.listShipment.append(cur_Shipment)
     shipment_listOut.statuscode="SUCCESS"
     shipment_listOut.statusmessage="Shipment Tracking Found" 
 
@@ -167,9 +212,29 @@ def getShipmentShipper(payload: dict,request: Request, db: Session = Depends(get
         statusmessage="No Shipment Tracking Found" 
         )
 
-    shipmenttracking_list=db.query(Shipment).filter(Shipment.shipperId == userId).all()
-    for tmp_Shipment in shipmenttracking_list:            
-        shipment_listOut.listShipment.append(tmp_Shipment)
+    shipmenttracking_list=db.query(Shipment).filter(Shipment.shipperId == userId).order_by(Shipment.createdDate.desc()).all()
+    shipperUser=db.query(Profile).filter(Profile.authIduser ==userId ).first()
+    for tmp_Shipment in shipmenttracking_list:
+        agencyUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.agencyId).first()
+        agencyUserseedorId=agencyUser.seedorId if agencyUser else "SEEDOR"
+        deliveryUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.deliveryId).first()
+        deliveryUserseedorId=deliveryUser.seedorId if deliveryUser else "SEEDOR"
+        cur_Shipment=Shipment(
+            idshipment=tmp_Shipment.idshipment,
+            shipmentCode=tmp_Shipment.shipmentCode,
+            agencyId=agencyUserseedorId,
+            label=tmp_Shipment.label,
+            shipperId=shipperUser.seedorId,
+            shipperName=tmp_Shipment.shipperName,
+            description=tmp_Shipment.description,
+            deliveryId=deliveryUserseedorId,
+            isActive=tmp_Shipment.isActive,
+            createdBy=tmp_Shipment.createdBy,
+            createdDate=tmp_Shipment.createdDate,
+            updatedBy=tmp_Shipment.updatedBy,
+            updatedDate=tmp_Shipment.updatedDate    
+        )            
+        shipment_listOut.listShipment.append(cur_Shipment)
     shipment_listOut.statuscode="SUCCESS"
     shipment_listOut.statusmessage="Shipment Tracking Found" 
 

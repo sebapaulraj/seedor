@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.db.db import get_db, engine
 from app.db.shipmentmodel import Shipment, Shipmenttracking
 from app.db.models import Base
+from app.db.usermodel import Profile
 from app.schemas.schemas import ShipmentGetOUT, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingGetIN,ShipmenttrackingGetOUT,ShipmenttrackingUpdateIN
 
 
@@ -28,8 +29,12 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
         statusmessage="Invalid Shipment Tracking Object"  
     )    
     
+    profile = db.query(Profile).filter(Profile.seedorId == shipmenttracking_in.userSeedorid).first()    
+    if not profile:
+        raise HTTPException(status_code=400, detail="Invalid SeedorId for Shipment Tracking")
+
     new_Shipmenttracking=Shipmenttracking(
-        idUserSeedorId=shipmenttracking_in.userSeedorid, 
+        idUserSeedorId=profile.seedorId, 
         idstatusUser=userId,
         shipmentTransitCode=shipmenttracking_in.shipmentTransitCode,
         shipmentTransitTitle=shipmenttracking_in.shipmentTransitTitle,        
@@ -71,9 +76,13 @@ def updateShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingUp
         statuscode="ERROR",
         statusmessage="Invalid Shipment Tracking Object"  
     )    
+
+    profile = db.query(Profile).filter(Profile.seedorId == shipmenttracking_in.userSeedorid).first()    
+    if not profile:
+        raise HTTPException(status_code=400, detail="Invalid SeedorId for Shipment Tracking")
     
     new_Shipmenttracking=Shipmenttracking(       
-        idUserSeedorId=shipmenttracking_in.userSeedorid, 
+        idUserSeedorId=profile.seedorId, 
         idstatusUser=userId,
         shipmentCode=shipmenttracking_in.shipmentCode,
         shipmentTransitCode=shipmenttracking_in.shipmentTransitCode,
