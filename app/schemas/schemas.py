@@ -330,6 +330,7 @@ class ShipmenttrackingBase(BaseModel):
     idshipmenttracking:str   
     idUserSeedorId:str 
     shipmentCode :str
+    deliverySeedorId:str
     shipmentTransitCode:str
     shipmentTransitTitle:str
     shipmenttrackingcontent:str
@@ -337,16 +338,18 @@ class ShipmenttrackingBase(BaseModel):
     shipmentTransitDetail:str
     isActive:bool
     seqNumber:int
-    createdDate:datetime 
+    createdDate:datetime
+    deliverySeedorId:str  
       
 
 class ShipmenttrackingNewIN(BaseModel):   
-    userSeedorid : str  =Field(min_length=3, max_length=100)
+    userSeedorid : str  =Field(min_length=3, max_length=100)   
     shipmentTransitCode : str  =Field(min_length=3, max_length=250)
     shipmentTransitTitle: str =Field(min_length=3, max_length=100)
     shipmenttrackingcontent: str =Field(min_length=3, max_length=1000)
     shipmentTransitSummary: str =Field(min_length=0, max_length=500)
     shipmentTransitDetail: str =Field(min_length=0, max_length=2500)
+    deliverySeedorId:str =Field(min_length=3, max_length=100)
         
 
 class ShipmenttrackingOut(BaseModel):
@@ -360,12 +363,14 @@ class ShipmenttrackingOut(BaseModel):
 class ShipmenttrackingUpdateIN(BaseModel):
     shipmentCode:str =Field(min_length=3, max_length=45)
     userSeedorid : str =Field(min_length=3, max_length=100)
+    deliverySeedorId:str =Field(min_length=3, max_length=100)
     shipmentTransitCode : str  =Field(min_length=3, max_length=250)
     shipmentTransitTitle: str =Field(min_length=3, max_length=100)
     shipmenttrackingcontent: str =Field(min_length=3, max_length=1000)
     shipmentTransitSummary: str =Field(min_length=0, max_length=500)
     shipmentTransitDetail: str =Field(min_length=0, max_length=2500)
     isActive:str=Field(...)
+    deliverySeedorId:str =Field(min_length=3, max_length=100)
     
 class ShipmenttrackingGetIN(BaseModel):
     shipmentCode:str =Field(min_length=3, max_length=45)

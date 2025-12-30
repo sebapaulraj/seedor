@@ -11,6 +11,7 @@ from app.db.db import get_db, engine
 from app.db.shipmentmodel import Shipment, Shipmenttracking
 from app.db.models import Base
 from app.db.usermodel import Profile
+from sqlalchemy.exc import SQLAlchemyError
 from app.schemas.schemas import ShipmentGetOUT, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingGetIN,ShipmenttrackingGetOUT,ShipmenttrackingUpdateIN
 
 
@@ -29,13 +30,19 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
         statusmessage="Invalid Shipment Tracking Object"  
     )    
     
-    profile = db.query(Profile).filter(Profile.seedorId == shipmenttracking_in.userSeedorid).first()    
-    if not profile:
+    shipperprofile = db.query(Profile).filter(Profile.seedorId == shipmenttracking_in.userSeedorid).first()    
+    if not shipperprofile:
         raise HTTPException(status_code=400, detail="Invalid SeedorId for Shipment Tracking")
+    
+    deliveryprofile = db.query(Profile).filter(Profile.seedorId == shipmenttracking_in.deliverySeedorId).first()    
+    deliverySeedorId=deliveryprofile.seedorId if deliveryprofile else "SEEDOR"
+    if not deliveryprofile and shipmenttracking_in.deliverySeedorId!="SEEDOR":
+        raise HTTPException(status_code=400, detail="Invalid Delivery SeedorId for Shipment Tracking")
 
     new_Shipmenttracking=Shipmenttracking(
-        idUserSeedorId=profile.seedorId, 
+        idUserSeedorId=shipperprofile.seedorId, 
         idstatusUser=userId,
+        deliverySeedorId=deliverySeedorId,  
         shipmentTransitCode=shipmenttracking_in.shipmentTransitCode,
         shipmentTransitTitle=shipmenttracking_in.shipmentTransitTitle,        
         shipmenttrackingcontent=shipmenttracking_in.shipmenttrackingcontent,
@@ -43,9 +50,9 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
         shipmentTransitDetail=shipmenttracking_in.shipmentTransitDetail,
         isActive=True,        
         createdBy = userId,
-        updatedBy = userId    
+        updatedBy = userId        
     )
-          
+              
     try:
         db.add(new_Shipmenttracking)
         db.commit()
@@ -56,9 +63,21 @@ def addShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingNewIN
         response_data.createdDate=new_Shipmenttracking.createdDate       
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Shipment Tracking Added Successfully"
-    except IntegrityError as e:            
+    except IntegrityError as e:  
         db.rollback()
+          # 🔍 Print full error details
+        print("IntegrityError occurred")
+        print("Error message:", str(e))
+        print("DBAPI error:", e.orig)        # actual DB error
+        print("SQL statement:", e.statement)
+        print("Parameters:", e.params)
+       
         raise HTTPException(status_code=400, detail="Addition Of Shipment Tracking update failed")        
+    except SQLAlchemyError as e:
+        print("General SQLAlchemyError caught")
+        print(str(e))
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Addition Of Shipment Tracking failed")
 
     return response_data
 
@@ -75,15 +94,25 @@ def updateShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingUp
         createdDate=datetime.now(),
         statuscode="ERROR",
         statusmessage="Invalid Shipment Tracking Object"  
-    )    
+    ) 
+
+    val_shipmentcoe=db.query(Shipment).filter(Shipment.shipmentCode == shipmenttracking_in.shipmentCode).first()
+    if not val_shipmentcoe:
+        raise HTTPException(status_code=400, detail="Invalid Shipment Code for Shipment Tracking")   
 
     profile = db.query(Profile).filter(Profile.seedorId == shipmenttracking_in.userSeedorid).first()    
     if not profile:
         raise HTTPException(status_code=400, detail="Invalid SeedorId for Shipment Tracking")
     
+    deliveryprofile = db.query(Profile).filter(Profile.seedorId == shipmenttracking_in.deliverySeedorId).first()    
+    deliverySeedorId=deliveryprofile.seedorId if deliveryprofile else "SEEDOR"
+    if not deliveryprofile and shipmenttracking_in.deliverySeedorId!="SEEDOR":
+        raise HTTPException(status_code=400, detail="Invalid Delivery SeedorId for Shipment Tracking")
+    
     new_Shipmenttracking=Shipmenttracking(       
         idUserSeedorId=profile.seedorId, 
         idstatusUser=userId,
+        deliverySeedorId=deliverySeedorId,  
         shipmentCode=shipmenttracking_in.shipmentCode,
         shipmentTransitCode=shipmenttracking_in.shipmentTransitCode,
         shipmentTransitTitle=shipmenttracking_in.shipmentTransitTitle,        
@@ -92,7 +121,8 @@ def updateShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingUp
         shipmentTransitDetail=shipmenttracking_in.shipmentTransitDetail,
         isActive=True,
         createdBy = userId,
-        updatedBy = userId    
+        updatedBy = userId
+          
     )  
     try:
         db.add(new_Shipmenttracking)

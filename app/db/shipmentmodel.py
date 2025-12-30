@@ -34,6 +34,7 @@ class Shipmenttracking(Base):
     idUserSeedorId=Column(String(45), nullable=True) 
     idUser=Column(String(45), nullable=True) 
     idstatusUser= Column(String(45), nullable=True) 
+    deliverySeedorId=Column(String(100), nullable=True)
     shipmentCode = Column(String(100), nullable=True)
     shipmentTransitCode= Column(String(100), nullable=False)
     shipmentTransitTitle= Column(String(100), nullable=True)
@@ -46,3 +47,4 @@ class Shipmenttracking(Base):
     createdDate = Column(DateTime,default=datetime.now, nullable=False)
     updatedBy = Column(String(45), default='SEEDOR', nullable=False)
     updatedDate = Column(DateTime,default=datetime.now, nullable=False,onupdate=func.now())
+    
