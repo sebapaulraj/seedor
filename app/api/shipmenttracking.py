@@ -155,7 +155,7 @@ def getShipmenttracking(payload: dict,shipmenttracking_in: ShipmenttrackingGetIN
         )
 
     if shipmenttracking_in.shipmentCode :
-        shipmenttracking_list=db.query(Shipmenttracking).filter(Shipmenttracking.shipmentCode == shipmenttracking_in.shipmentCode).all()
+        shipmenttracking_list=db.query(Shipmenttracking).filter(Shipmenttracking.shipmentCode == shipmenttracking_in.shipmentCode).order_by(Shipmenttracking.seqNumber.desc()).all()
         shipmenttracking_listOut.shipmentCode =shipmenttracking_in.shipmentCode
         for tmpShipmenttracking in shipmenttracking_list:           
           shipmenttracking_listOut.listShipmenttracking.append(tmpShipmenttracking)

@@ -13,6 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.api.access import getAccessById, getHistoryAccess, getHistoryAccessAll, getPublicAccess, getTypeIdAccess,grandAccess, revokeAccess
 from app.api.address import addAddress, deleteAddress,getAddressesAll, getAddressesId, updateAddress
 from app.api.agreement import addAgreement, deleteAgreement,getAgreementAll, getAgreementId, updateAgreement
+from app.api.notification import UpdateNotificationDelete, UpdateNotificationDelete, UpdateNotificationDelivery, UpdateNotificationReadReceipt, UpdateNotificationReadReceipt, createNotification, getNotificationAllReceiver, getNotificationAllReceiverByDeliveryStatus, getNotificationAllReceiverById, getNotificationAllReceiverByReadingStatus,getNotificationAllSender, getNotificationAllSenderByDeliveryStatus, getNotificationAllSenderById, getNotificationAllSenderById, getNotificationAllSenderByReadingStatus
 from app.core.config import settings
 from app.api.consent import   getConsentOfferdAll, getConsentOfferdId,  getConsentSignedAll, getConsentSignedId
 from app.api.consentrequest import acceptConsentOffer, acceptConsentRequest, createConsentOffer, createConsentRequest, getconsentRequestBeneficiaryHistoryItemId, getconsentRequestBeneficiaryHistoryItemType, getconsentRequestHistoryItemId, getconsentRequestHistoryItemType,rejectConsentOffer, rejectConsentRequest
@@ -21,6 +22,7 @@ from app.db.usermodel import User,Profile
 from app.db.mastermodel import Lov
 from app.db.models import Base
 from app.schemas.consentschema import ConsentGetIN, ConsentGetOUT, ConsentRequestGETIN, ConsentRequestNewIN, ConsentRequestOut, ConsentUpdateIN
+from app.schemas.notificationschema import NotificationOut, NotificationRequestIN, NotificationRequestNewIN
 from app.schemas.schemas import AccessGetIdIN, AccessGetIdTypeIN, AccessGetIdTypePublicIN, AccessNewIN, AccessOut, AddressDeleteIN, AddressGetIN, AddressGetOUT, AddressNewIN, AddressOut, AddressUpdateIN, AgreementDeleteIN, AgreementGetIN, AgreementNewIN, AgreementOut, AgreementUpdateIN, LovAddressIn, Password,ShipmentNewIN, ShipmentOut, ShipmentUpdateIN, ShipmenttrackingGetIN, ShipmenttrackingNewIN, ShipmenttrackingOut, ShipmenttrackingUpdateIN, UserCreate, UserOut,LoginUser,LoginOut,LovOut,LovIn,UserName,UserNameOut,UserProfile,UserProfileOut,ValidateSeedorId,ValidateSeedorIdOut
 from app.api.auth import create_access_token,verify_access_token,get_bearer_token,manual_basic_auth,verify_basic_auth
 from app.core.rate_limit import check_rate_limit
@@ -713,6 +715,153 @@ async def load_validate_address(lovAddressIn: LovAddressIn,request: Request,db: 
       response = JSONResponse(status_code=200, content=response_data)
       response.headers["X-Access-Token"] = token
       return response
+
+#------- notification block started -------------
+
+@app.post("/seedor/1.0/notification/create", response_model=NotificationOut, status_code=201)
+async def notificationCreate(request: Request,notificationRequestNewIN_in: NotificationRequestNewIN, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=createNotification(payload,notificationRequestNewIN_in, request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+
+@app.get("/seedor/1.0/notification/sender", response_model=NotificationOut, status_code=201)
+async def notificationGetSender(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getNotificationAllSender(payload,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+
+@app.get("/seedor/1.0/notification/receiver", response_model=NotificationOut, status_code=201)
+async def notificationGetReceiver(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    response_data=getNotificationAllReceiver(payload,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/notification/receiver/{id:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetReceiverById(request: Request, db: Session = Depends(get_db),id: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(idnotification=id,deliveryStatus="",readingStatus="")
+    response_data=getNotificationAllReceiverById(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/notification/deliverystatus/receiver/{status:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetReceiverById(request: Request, db: Session = Depends(get_db),status: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(deliveryStatus=status,idnotification="",readingStatus="")
+    response_data=getNotificationAllReceiverByDeliveryStatus(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/notification/readingstatus/receiver/{status:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetReceiverById(request: Request, db: Session = Depends(get_db),status: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(readingStatus=status,idnotification="",deliveryStatus="")
+    response_data=getNotificationAllReceiverByReadingStatus(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/notification/sender/{id:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetReceiverById(request: Request, db: Session = Depends(get_db),id: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(idnotification=id,deliveryStatus="",readingStatus="")
+    response_data=getNotificationAllSenderById(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/notification/deliverystatus/sender/{status:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetReceiverById(request: Request, db: Session = Depends(get_db),status: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(deliveryStatus=status,readingStatus="",idnotification="")
+    response_data=getNotificationAllSenderByDeliveryStatus(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.get("/seedor/1.0/notification/readingstatus/sender/{status:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetReceiverById(request: Request, db: Session = Depends(get_db),status: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(readingStatus=status,idnotification="",deliveryStatus="")
+    response_data=getNotificationAllSenderByReadingStatus(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.put("/seedor/1.0/notification/delivered/{id:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetSender(request: Request, db: Session = Depends(get_db),id: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(idnotification=id,deliveryStatus="",readingStatus="")
+    response_data=UpdateNotificationDelivery(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.put("/seedor/1.0/notification/readreceipt/{id:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetSender(request: Request, db: Session = Depends(get_db),id: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(idnotification=id,deliveryStatus="",readingStatus="")
+    response_data=UpdateNotificationReadReceipt(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.delete("/seedor/1.0/notification/delete/{id:path}", response_model=NotificationOut, status_code=201)
+async def notificationGetSender(request: Request, db: Session = Depends(get_db),id: str = Path(...,min_length=3,max_length=200)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)
+    notificationRequestNewIN_in= NotificationRequestIN(idnotification=id,deliveryStatus="",readingStatus="")
+    response_data=UpdateNotificationDelete(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+#------- notification block ends -------------
 
 # Health check
 @app.get("/seedor/1.0/health")
