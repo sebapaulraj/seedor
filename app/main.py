@@ -72,13 +72,24 @@ async def db_integrity_exception_handler(request: Request, exc: IntegrityError):
     )
 
 
+@app.websocket("/seedor/1.0/ws/{actor_id}")
+async def websocket_endpoint(websocket: WebSocket, actor_id: str):
+    await websocket.accept()
+    active_connections[actor_id] = websocket
+    print(f"WebSocket connection established for actor_id: {actor_id}")
+    try:
+        while True:
+            await websocket.receive_text()
+    except:
+        del active_connections[actor_id]
+
+
 @app.get("/seedor/1.0/ws/active-wsconnections", response_model=list[str])
 async def get_active_connections():
     """
     Returns a list of all active actor_ids connected via WebSocket.
     """
     return list(active_connections.keys())
-
 
 
 #------- authentication block starts -------------
