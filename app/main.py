@@ -1,4 +1,3 @@
-from ast import List
 import os
 import json
 from fastapi import FastAPI, Depends, HTTPException, Path, Query, status, Request,WebSocket
@@ -73,7 +72,7 @@ async def db_integrity_exception_handler(request: Request, exc: IntegrityError):
     )
 
 
-@app.get("/seedor/1.0/ws/active-wsconnections", response_model=List[str])
+@app.get("/seedor/1.0/ws/active-wsconnections", response_model=list[str])
 async def get_active_connections():
     """
     Returns a list of all active actor_ids connected via WebSocket.
