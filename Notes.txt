@@ -1,0 +1,3 @@
+git add .
+git commit -m "Fix websocket connection and update Docker logging"
+git push origin main
