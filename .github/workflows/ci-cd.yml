@@ -41,4 +41,4 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/seedor-app:latest
             docker stop seedor-container || true
             docker rm seedor-container || true
-            docker run -d -p 8000:8000 --name seedor-container ${{ secrets.DOCKERHUB_USERNAME }}/seedor-app:latest
+            docker run -d -p 8000:8000 --name seedor-container --restart unless-stopped --memory 1g  --memory-swap 2g -v /var/log/seedor:/app/logs ${{ secrets.DOCKERHUB_USERNAME }}/seedor-app:latest
