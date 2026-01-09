@@ -46,7 +46,9 @@ def createConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
     response_data=ConsentRequestOut(
         idconsentrequest="",
         itemOwnerIdUser ="",
+        itemOwnerSeedorId="",
         itemBeneficiaryIdUser ="",
+        itemBeneficiarySeedor="",   
         itemType="",
         itemId="",
         status="",
@@ -63,10 +65,17 @@ def createConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
     validateConsentItem(consentReq_in, db)
 
     profile = db.query(Profile).filter(Profile.seedorId == consentReq_in.itemOwnerSeedorId).first()
+    tmp_BeneficiaryProfile=db.query(Profile).filter(Profile.authIduser==userId).first()
+
     if not profile:
         response_data.statuscode="ERROR"
         response_data.statusmessage="Invalid Consent Request Seedorid"
         return response_data 
+    
+    if not tmp_BeneficiaryProfile:
+        response_data.statuscode="ERROR"
+        response_data.statusmessage="Invalid Beneficiary Userid"
+        return response_data
              
     tmp_accessCount=db.query(func.max(Access.seqCounter)).filter(
         Access.accessTypeId == consentReq_in.itemId).filter(
@@ -115,7 +124,9 @@ def createConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         db.refresh(new_consentRequest) 
         response_data.idconsentrequest=new_consentRequest.idconsentrequest
         response_data.itemOwnerIdUser= new_consentRequest.itemOwnerIdUser
+        response_data.itemOwnerSeedorId=profile.seedorId
         response_data.itemBeneficiaryIdUser=new_consentRequest.itemBeneficiaryIdUser
+        response_data.itemBeneficiarySeedor=tmp_BeneficiaryProfile.seedorId
         response_data.itemType=new_consentRequest.itemType
         response_data.itemId=new_consentRequest.itemId
         response_data.status=new_consentRequest.status
@@ -140,8 +151,10 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
     
     response_data=ConsentRequestOut(
         idconsentrequest="",
-        itemOwnerIdUser="",  
+        itemOwnerIdUser="", 
+        itemOwnerSeedorId=  "", 
         itemBeneficiaryIdUser="",
+        itemBeneficiarySeedor="",
         itemType="",
         itemId="",
         status="",
@@ -158,10 +171,15 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
     validateConsentItem(consentReq_in, db)
 
     profile = db.query(Profile).filter(Profile.seedorId == consentReq_in.itemBeneficiarySeedorId).first()
+    tmp_OwnerProfile=db.query(Profile).filter(Profile.authIduser==userId).first()
     if not profile:
         response_data.statusmessage="Invalid Beneficiry Seedorid"
         return response_data
     
+    if not tmp_OwnerProfile:
+        response_data.statusmessage="Invalid Owner Userid"
+        return response_data
+
     tmp_accessCount=db.query(func.max(Access.seqCounter)).filter(
         Access.accessTypeId == consentReq_in.itemId).filter(
         Access.accessTypeValue == consentReq_in.itemType).filter(
@@ -207,7 +225,9 @@ def createConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         db.refresh(new_consentRequest) 
         response_data.idconsentrequest=new_consentRequest.idconsentrequest
         response_data.itemOwnerIdUser= new_consentRequest.itemOwnerIdUser
+        response_data.itemOwnerSeedorId=tmp_OwnerProfile.seedorId
         response_data.itemBeneficiaryIdUser=new_consentRequest.itemBeneficiaryIdUser
+        response_data.itemBeneficiarySeedor=profile.seedorId
         response_data.itemType=new_consentRequest.itemType
         response_data.itemId=new_consentRequest.itemId
         response_data.status=new_consentRequest.status   
@@ -233,7 +253,9 @@ def acceptConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
     response_data=ConsentRequestOut(
         idconsentrequest="",
         itemOwnerIdUser="",  
+        itemOwnerSeedorId="",
         itemBeneficiaryIdUser="",
+        itemBeneficiarySeedor="",
         itemType="",
         itemId="",
         status="",
@@ -250,8 +272,13 @@ def acceptConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
          
     validateConsentItem(consentReq_in, db)
     profile = db.query(Profile).filter(Profile.seedorId == consentReq_in.itemOwnerSeedorId).first()
+    tmp_OwnerProfile=db.query(Profile).filter(Profile.authIduser==userId).first()
     if not profile:
         response_data.statusmessage="Invalid Beneficiary Seedorid"
+        return response_data
+    
+    if not tmp_OwnerProfile:
+        response_data.statusmessage="Invalid Owner Userid"
         return response_data
     
     tmp_seq= db.query(func.max(ConsentRequest.seqCounter)).filter(
@@ -282,7 +309,9 @@ def acceptConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         db.refresh(new_consentRequest) 
         response_data.idconsentrequest=new_consentRequest.idconsentrequest
         response_data.itemOwnerIdUser= new_consentRequest.itemOwnerIdUser
+        response_data.itemOwnerSeedorId=profile.seedorId
         response_data.itemBeneficiaryIdUser=new_consentRequest.itemBeneficiaryIdUser
+        response_data.itemBeneficiarySeedor=tmp_OwnerProfile.seedorId
         response_data.itemId=new_consentRequest.itemId
         response_data.itemType=new_consentRequest.itemType
         response_data.status=new_consentRequest.status
@@ -309,8 +338,10 @@ def acceptConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
     
     response_data=ConsentRequestOut(
         idconsentrequest="",
-        itemOwnerIdUser="",  
+        itemOwnerIdUser="", 
+        itemOwnerSeedorId="", 
         itemBeneficiaryIdUser="",
+        itemBeneficiarySeedor="",
         itemType="",
         itemId="",
         status="", 
@@ -328,8 +359,12 @@ def acceptConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
          
     validateConsentItem(consentReq_in, db)
     profile = db.query(Profile).filter(Profile.seedorId == consentReq_in.itemBeneficiarySeedorId).first()
+    tmp_Ownerprofile = db.query(Profile).filter(Profile.authIduser == userId).first()
     if not profile:
         raise HTTPException(status_code=400, detail="Invalid Signatory Seedorid") 
+    
+    if not tmp_Ownerprofile:
+        raise HTTPException(status_code=400, detail="Invalid Owner Seedorid")
     
     tmp_seq= db.query(func.max(ConsentRequest.seqCounter)).filter(
         ConsentRequest.itemOwnerIdUser == userId ).filter(
@@ -359,7 +394,9 @@ def acceptConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         db.refresh(new_consentRequest) 
         response_data.idconsentrequest=new_consentRequest.idconsentrequest
         response_data.itemOwnerIdUser= new_consentRequest.itemOwnerIdUser
+        response_data.itemOwnerSeedorId=tmp_Ownerprofile.seedorId
         response_data.itemBeneficiaryIdUser=new_consentRequest.itemBeneficiaryIdUser
+        response_data.itemBeneficiarySeedor=profile.seedorId
         response_data.itemId=new_consentRequest.itemId
         response_data.status=new_consentRequest.status
         response_data.requestedBy=new_consentRequest.requestedBy
@@ -386,8 +423,10 @@ def rejectConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
     
     response_data=ConsentRequestOut(
         idconsentrequest="",
-        itemOwnerIdUser="",  
+        itemOwnerIdUser="", 
+        itemOwnerSeedorId="", 
         itemBeneficiaryIdUser="",
+        itemBeneficiarySeedor="",
         itemType="",
         itemId="",
         status="",
@@ -404,8 +443,12 @@ def rejectConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
     
     validateConsentItem(consentReq_in, db)
     profile = db.query(Profile).filter(Profile.seedorId == consentReq_in.itemOwnerSeedorId).first()
+    tmp_OwnerProfile = db.query(Profile).filter(Profile.authIduser == userId).first()
     if not profile:
         raise HTTPException(status_code=400, detail="Invalid Item Owner Seedorid") 
+    
+    if not tmp_OwnerProfile:
+        raise HTTPException(status_code=400, detail="Invalid Owner Seedorid")
     
     tmp_seq= db.query(func.max(ConsentRequest.seqCounter)).filter(
         ConsentRequest.itemOwnerIdUser ==profile.authIduser ).filter(
@@ -434,7 +477,9 @@ def rejectConsentRequest(payload: dict,consentReq_in: ConsentRequestNewIN, reque
         db.refresh(new_consentRequest) 
         response_data.idconsentrequest=new_consentRequest.idconsentrequest
         response_data.itemOwnerIdUser= new_consentRequest.itemOwnerIdUser
+        response_data.itemOwnerSeedorId=tmp_OwnerProfile.seedorId
         response_data.itemBeneficiaryIdUser=new_consentRequest.itemBeneficiaryIdUser
+        response_data.itemBeneficiarySeedor=profile.seedorId
         response_data.itemId=new_consentRequest.itemId
         response_data.status=new_consentRequest.status
         response_data.itemType=new_consentRequest.itemType
@@ -460,8 +505,10 @@ def rejectConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
     
     response_data=ConsentRequestOut(
         idconsentrequest="",
-        itemOwnerIdUser="",  
+        itemOwnerIdUser="", 
+        itemOwnerSeedorId="", 
         itemBeneficiaryIdUser="",
+        itemBeneficiarySeedor="",
         itemType="",
         itemId="",
         status="",
@@ -478,8 +525,12 @@ def rejectConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
     
     validateConsentItem(consentReq_in, db)
     profile = db.query(Profile).filter(Profile.seedorId == consentReq_in.itemBeneficiarySeedorId).first()
+    tmp_Ownerprofile = db.query(Profile).filter(Profile.authIduser == userId).first()
     if not profile:
         raise HTTPException(status_code=400, detail="Invalid Signatory Seedorid") 
+    
+    if not tmp_Ownerprofile:
+        raise HTTPException(status_code=400, detail="Invalid Owner Seedorid")
     
     tmp_seq= db.query(func.max(ConsentRequest.seqCounter)).filter(
         ConsentRequest.itemOwnerIdUser ==userId ).filter(
@@ -508,7 +559,9 @@ def rejectConsentOffer(payload: dict,consentReq_in: ConsentRequestNewIN, request
         db.refresh(new_consentRequest) 
         response_data.idconsentrequest=new_consentRequest.idconsentrequest
         response_data.itemOwnerIdUser= new_consentRequest.itemOwnerIdUser
+        response_data.itemOwnerSeedorId=tmp_Ownerprofile.seedorId
         response_data.itemBeneficiaryIdUser=new_consentRequest.itemBeneficiaryIdUser
+        response_data.itemBeneficiarySeedor=profile.seedorId
         response_data.itemId=new_consentRequest.itemId
         response_data.status=new_consentRequest.status 
         response_data.requestedBy=new_consentRequest.requestedBy
@@ -575,7 +628,9 @@ def getconsentRequestHistoryItemId(payload: dict,consentReq_in: ConsentRequestGE
     tmp_consentReq_Out=ConsentRequestOut(
         idconsentrequest="",
         itemOwnerIdUser="", 
+        itemOwnerSeedorId="",
         itemBeneficiaryIdUser="",
+        itemBeneficiarySeedor="",
         itemType="",
         itemId="",
         status="",
@@ -596,8 +651,10 @@ def getconsentRequestHistoryItemId(payload: dict,consentReq_in: ConsentRequestGE
          tmp_BeneficiaryProfile=db.query(Profile).filter(Profile.authIduser==consentReq_Out.itemBeneficiaryIdUser).first()
          tmpconsentRequestBaseModel=ConsentRequestOut(
             idconsentrequest=consentReq_Out.idconsentrequest,
-            itemOwnerIdUser= tmp_OwnerProfile.seedorId,  
-            itemBeneficiaryIdUser=tmp_BeneficiaryProfile.seedorId,
+            itemOwnerIdUser= tmp_OwnerProfile.authIduser,  
+            itemOwnerSeedorId=tmp_OwnerProfile.seedorId,
+            itemBeneficiaryIdUser=tmp_BeneficiaryProfile.authIduser,
+            itemBeneficiarySeedor=tmp_BeneficiaryProfile.seedorId,
             itemType=consentReq_Out.itemType,
             itemId=consentReq_Out.itemId,
             status=consentReq_Out.status,
@@ -636,7 +693,7 @@ def getconsentRequestBeneficiaryHistoryItemType(payload: dict,consentReq_in: Con
          tmp_BeneficiaryProfile=db.query(Profile).filter(Profile.authIduser==tmpconsentRequ.itemBeneficiaryIdUser).first()
          tmpconsentRequestBaseModel=ConsentRequest(
             idconsentrequest=tmpconsentRequ.idconsentrequest,
-            itemOwnerIdUser= tmp_OwnerProfile.seedorId,  
+            itemOwnerIdUser= tmp_OwnerProfile.seedorId, 
             itemBeneficiaryIdUser=tmp_BeneficiaryProfile.seedorId,
             itemType=tmpconsentRequ.itemType,
             itemId=tmpconsentRequ.itemId,
@@ -666,7 +723,9 @@ def getconsentRequestBeneficiaryHistoryItemId(payload: dict,consentReq_in: Conse
     tmp_consentReq_Out=ConsentRequestOut(
         idconsentrequest="",
         itemOwnerIdUser="", 
+        itemOwnerSeedorId="",
         itemBeneficiaryIdUser="",
+        itemBeneficiarySeedor="",
         itemType="",
         itemId="",
         status="",
@@ -687,8 +746,10 @@ def getconsentRequestBeneficiaryHistoryItemId(payload: dict,consentReq_in: Conse
          tmp_BeneficiaryProfile=db.query(Profile).filter(Profile.authIduser==consentReq_Out.itemBeneficiaryIdUser).first()
          tmpconsentRequestBaseModel=ConsentRequestOut(
             idconsentrequest=consentReq_Out.idconsentrequest,
-            itemOwnerIdUser= tmp_OwnerProfile.seedorId,  
-            itemBeneficiaryIdUser=tmp_BeneficiaryProfile.seedorId,
+            itemOwnerIdUser= tmp_OwnerProfile.authIduser,  
+            itemOwnerSeedorId=tmp_OwnerProfile.seedorId,
+            itemBeneficiaryIdUser=tmp_BeneficiaryProfile.authIduser,
+            itemBeneficiarySeedor=tmp_BeneficiaryProfile.seedorId,
             itemType=consentReq_Out.itemType,
             itemId=consentReq_Out.itemId,
             status=consentReq_Out.status,

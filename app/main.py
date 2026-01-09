@@ -35,12 +35,18 @@ from app.api.user import registerUser, updatePassword,validateUserName,validateL
 from app.api.master import getLov, insert_countries, insert_states, lookup_zip
 from app.api.userprofile import updateProfile,validateSeedorId
 from app.api.resetPassword import sendPasswordRestEmail
-
+from datetime import datetime
 # Create DB tables (run once or via migrations in prod — Alembic recommended)
 #Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Seedor Information Seeding API")
-active_connections = {}
+
+# In-memory store for active WebSocket connections and their messages
+active_connections: dict[str, WebSocket] = {}
+connection_messages: dict[str, list[str]] = {}
+connection_meta: dict[str, dict] = {}
+
+
 # CORS - restrict origins in production
 app.add_middleware(
     CORSMiddleware,
@@ -71,25 +77,68 @@ async def db_integrity_exception_handler(request: Request, exc: IntegrityError):
         content={"detail": "Database integrity error."},
     )
 
-
+# WebSocket endpoint for real-time notifications
 @app.websocket("/seedor/1.0/ws/{actor_id}")
 async def websocket_endpoint(websocket: WebSocket, actor_id: str):
     await websocket.accept()
     active_connections[actor_id] = websocket
+    connection_messages[actor_id] = []
+    connection_meta[actor_id] = {
+        "connected_at": datetime.utcnow().isoformat(),
+        "last_message_at": None
+    }
+
     print(f"WebSocket connection established for actor_id: {actor_id}")
+    
     try:
         while True:
-            await websocket.receive_text()
-    except:
-        del active_connections[actor_id]
+            msg = await websocket.receive_text()
 
+            print(f"Message from {actor_id}: {msg}")
 
+            connection_messages[actor_id].append(msg)
+            connection_meta[actor_id]["last_message_at"] = datetime.utcnow().isoformat()
+
+    except Exception as e:
+        print(f"WebSocket disconnected: {actor_id} -> {e}")
+
+    finally:
+        active_connections.pop(actor_id, None)
+        connection_messages.pop(actor_id, None)
+        connection_meta.pop(actor_id, None)
+
+# WebSocket endpoint for real-time notifications
 @app.get("/seedor/1.0/ws/active-wsconnections", response_model=list[str])
 async def get_active_connections():
     """
     Returns a list of all active actor_ids connected via WebSocket.
     """
     return list(active_connections.keys())
+
+
+# WebSocket endpoint for real-time notifications
+@app.get("/seedor/1.0/ws/actor/messages/{actor_id}")
+async def get_messages(actor_id: str):
+    if actor_id not in connection_messages:
+        return {"error": "actor not connected"}
+    return {
+        "actor_id": actor_id,
+        "messages": connection_messages[actor_id],
+        "meta": connection_meta[actor_id]
+    }
+
+# Debug endpoint to view all active connections and their messages
+@app.get("/seedor/1.0/ws/message/debug")
+async def websocket_debug():
+    return {
+        "active_connections": list(active_connections.keys()),
+        "details": {
+            k: {
+                "messages": connection_messages[k],
+                "meta": connection_meta[k]
+            } for k in active_connections
+        }
+    }
 
 
 #------- authentication block starts -------------
@@ -420,9 +469,9 @@ async def consentRequestCreate(consent_in: ConsentRequestNewIN, request: Request
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=createConsentRequest(payload,consent_in, request, db)
-    itemOwner_id = response_data.itemOwnerIdUser
-    if itemOwner_id in active_connections:
-        await active_connections[response_data.itemOwnerIdUser].send_json({"msg":response_data.dict()})
+    itemOwner_seedor = response_data.itemOwnerSeedorId
+    if itemOwner_seedor in active_connections:
+        await active_connections[itemOwner_seedor].send_json({"msg":response_data.dict()})
         response_data.isactiveConnection=True
         response_data.consentSendStatus="Consent Requested"
     
@@ -437,9 +486,9 @@ async def consentRequestOffer(consent_in: ConsentRequestNewIN, request: Request,
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=createConsentOffer(payload,consent_in, request, db)
-    itemBeneficiary_id = response_data.itemBeneficiaryIdUser
-    if itemBeneficiary_id in active_connections:
-        await active_connections[response_data.itemBeneficiaryIdUser].send_json({"msg":response_data.dict()})
+    itemBeneficiary_seedor = response_data.itemBeneficiarySeedor
+    if itemBeneficiary_seedor in active_connections:
+        await active_connections[itemBeneficiary_seedor].send_json({"msg":response_data.dict()})
         response_data.isactiveConnection=True
         response_data.consentSendStatus="Consent Requested"
     
@@ -454,6 +503,12 @@ async def consentRequestAcceptRequest(consent_in: ConsentRequestNewIN, request: 
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=acceptConsentRequest(payload,consent_in, request, db)
+    itemOwner_seedor = response_data.itemOwnerSeedorId
+    if itemOwner_seedor in active_connections:
+        await active_connections[itemOwner_seedor].send_json({"msg":response_data.dict()})
+        response_data.isactiveConnection=True
+        response_data.consentSendStatus="Consent Requested"
+
     response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
@@ -465,6 +520,12 @@ async def consentRequestAcceptOffer(consent_in: ConsentRequestNewIN, request: Re
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=acceptConsentOffer(payload,consent_in, request, db)
+    itemBeneficiary_seedor = response_data.itemBeneficiarySeedor
+    if itemBeneficiary_seedor in active_connections:
+        await active_connections[itemBeneficiary_seedor].send_json({"msg":response_data.dict()})
+        response_data.isactiveConnection=True
+        response_data.consentSendStatus="Consent Requested"
+
     response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
@@ -477,6 +538,12 @@ async def consentRejectRequestReject(consent_in: ConsentRequestNewIN, request: R
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=rejectConsentRequest(payload,consent_in, request, db)
+    itemOwner_seedor = response_data.itemOwnerSeedorId
+    if itemOwner_seedor in active_connections:
+        await active_connections[itemOwner_seedor].send_json({"msg":response_data.dict()})
+        response_data.isactiveConnection=True
+        response_data.consentSendStatus="Consent Requested"
+
     response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response
@@ -488,6 +555,12 @@ async def consentRejectRequestOffer(consent_in: ConsentRequestNewIN, request: Re
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=rejectConsentOffer(payload,consent_in, request, db)
+    itemBeneficiary_seedor = response_data.itemBeneficiarySeedor
+    if itemBeneficiary_seedor in active_connections:
+        await active_connections[itemBeneficiary_seedor].send_json({"msg":response_data.dict()})
+        response_data.isactiveConnection=True
+        response_data.consentSendStatus="Consent Requested"
+
     response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response

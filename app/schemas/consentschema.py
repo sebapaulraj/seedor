@@ -44,7 +44,9 @@ class ConsentRequest(BaseModel):
 class ConsentRequestOut(BaseModel):
     idconsentrequest:str
     itemOwnerIdUser:str  
+    itemOwnerSeedorId:str
     itemBeneficiaryIdUser:str
+    itemBeneficiarySeedor:str
     itemType: str
     itemId:str
     status:str
