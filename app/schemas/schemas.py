@@ -11,6 +11,12 @@ base_model_config = ConfigDict(
     from_attributes=True
 )
 
+#---------- WebSocket Message -------------#
+
+class PushMessage(BaseModel):
+    actor_id: str
+    message: str
+
 #---------- User -------------#
 
 class UserCreate(BaseModel):
