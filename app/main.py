@@ -32,7 +32,7 @@ from app.utils.emailauth_utils import create_email_token, verify_email_token
 from app.api.shipment import addShipment, getShipmentAgent, getShipmentDelivery, getShipmentShipper, updateShipment
 from app.api.shipmenttracking import addShipmenttracking, getShipmenttracking,updateShipmenttracking
 from app.api.user import registerUser, updatePassword,validateUserName,validateLogin
-from app.api.master import getLov, insert_countries, insert_states, lookup_zip
+from app.api.master import getLov, insert_countries, insert_states, lookup_india_pin, lookup_us_ca_zip
 from app.api.userprofile import updateProfile,validateSeedorId
 from app.api.resetPassword import sendPasswordRestEmail
 from datetime import datetime
@@ -499,7 +499,21 @@ async def consentRequestCreate(consent_in: ConsentRequestNewIN, request: Request
     token=get_bearer_token(request)
     payload=verify_access_token(token)
     response_data=createConsentRequest(payload,consent_in, request, db)
-    itemOwner_seedor = response_data.itemOwnerSeedorId    
+    itemOwner_seedor = response_data.itemOwnerSeedorId 
+    itemBeneficiary_seedor = response_data.itemBeneficiarySeedor
+    tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
+        notificationType="INFO",
+        templateCode="TPL_CONREQ_INFO",
+        deliveryMethod="PUSH",
+        messageTitle="Consent Request Created",
+        messageSubject="Consent Request Raised Successfully",
+        senderSeedorId=itemOwner_seedor,
+        receiverSeedorId=itemBeneficiary_seedor,
+        itemId=response_data.idconsentrequest,
+        itemType=consent_in.itemType,
+        message=str(response_data.dict())
+    )
+    createNotification(payload,tmp_notificationRequestNewIN_in, request, db)   
     if is_actor_online(itemOwner_seedor):
         send_to_actor(itemOwner_seedor, str(response_data.dict()))
         response_data.isactiveConnection=True
@@ -517,6 +531,15 @@ async def consentRequestOffer(consent_in: ConsentRequestNewIN, request: Request,
     payload=verify_access_token(token)
     response_data=createConsentOffer(payload,consent_in, request, db)
     itemBeneficiary_seedor = response_data.itemBeneficiarySeedor
+    tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
+        notificationType="INFO",
+        senderSeedorId=response_data.itemOwnerSeedorId,
+        receiverSeedorId=itemBeneficiary_seedor,
+        itemId=response_data.idconsentrequest,
+        itemType=consent_in.itemType,
+        message=str(response_data.dict())
+    )
+    createNotification(payload,tmp_notificationRequestNewIN_in, request, db)
     if is_actor_online(itemBeneficiary_seedor):
         send_to_actor(itemBeneficiary_seedor, str(response_data.dict()))
         response_data.isactiveConnection=True
@@ -534,6 +557,20 @@ async def consentRequestAcceptRequest(consent_in: ConsentRequestNewIN, request: 
     payload=verify_access_token(token)
     response_data=acceptConsentRequest(payload,consent_in, request, db)
     itemOwner_seedor = response_data.itemOwnerSeedorId
+    tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
+        notificationType="INFO",
+        templateCode="TPL_CONREQ_ACCEPT",
+        deliveryMethod="PUSH",
+        messageTitle="Consent Request Created",
+        messageSubject="Consent Request Raised Successfully",
+        senderSeedorId=response_data.itemBeneficiarySeedor,
+        receiverSeedorId=itemOwner_seedor,
+        itemId=response_data.idconsentrequest,
+        itemType=consent_in.itemType,
+        message=str(response_data.dict())
+    )
+     
+    createNotification(payload,tmp_notificationRequestNewIN_in, request, db)
     if is_actor_online(itemOwner_seedor):
         send_to_actor(itemOwner_seedor, str(response_data.dict()))
         response_data.isactiveConnection=True
@@ -551,6 +588,19 @@ async def consentRequestAcceptOffer(consent_in: ConsentRequestNewIN, request: Re
     payload=verify_access_token(token)
     response_data=acceptConsentOffer(payload,consent_in, request, db)
     itemBeneficiary_seedor = response_data.itemBeneficiarySeedor
+    tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
+        notificationType="INFO",
+        templateCode="TPL_CONREQ_ACCEPT",
+        deliveryMethod="PUSH",
+        messageTitle="Consent Request Created",
+        messageSubject="Consent Request Raised Successfully",
+        senderSeedorId=response_data.itemOwnerSeedorId,
+        receiverSeedorId=itemBeneficiary_seedor,
+        itemId=response_data.idconsentrequest,
+        itemType=consent_in.itemType,
+        message=str(response_data.dict())
+    )
+    createNotification(payload,tmp_notificationRequestNewIN_in, request, db)
     if is_actor_online(itemBeneficiary_seedor):
         send_to_actor(itemBeneficiary_seedor, str(response_data.dict()))
         response_data.isactiveConnection=True
@@ -569,6 +619,19 @@ async def consentRejectRequestReject(consent_in: ConsentRequestNewIN, request: R
     payload=verify_access_token(token)
     response_data=rejectConsentRequest(payload,consent_in, request, db)
     itemOwner_seedor = response_data.itemOwnerSeedorId
+    tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
+        notificationType="INFO",
+        templateCode="TPL_CONREQ_REJECT",
+        deliveryMethod="PUSH",
+        messageTitle="Consent Request Rejected",
+        messageSubject="Consent Request Rejected Successfully",
+        senderSeedorId=response_data.itemBeneficiarySeedor,
+        receiverSeedorId=itemOwner_seedor,
+        itemId=response_data.idconsentrequest,
+        itemType=consent_in.itemType,
+        message=str(response_data.dict())
+    )
+    createNotification(payload,tmp_notificationRequestNewIN_in, request, db)
     if is_actor_online(itemOwner_seedor):
         send_to_actor(itemOwner_seedor, str(response_data.dict()))
         response_data.isactiveConnection=True
@@ -586,6 +649,19 @@ async def consentRejectRequestOffer(consent_in: ConsentRequestNewIN, request: Re
     payload=verify_access_token(token)
     response_data=rejectConsentOffer(payload,consent_in, request, db)
     itemBeneficiary_seedor = response_data.itemBeneficiarySeedor
+    tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
+        notificationType="INFO",
+        templateCode="TPL_CONREQ_REJECT",
+        deliveryMethod="PUSH",
+        messageTitle="Consent Request Rejected",
+        messageSubject="Consent Request Rejected Successfully",
+        senderSeedorId=response_data.itemOwnerSeedorId,
+        receiverSeedorId=itemBeneficiary_seedor,
+        itemId=response_data.idconsentrequest,
+        itemType=consent_in.itemType,
+        message=str(response_data.dict())
+    )
+    createNotification(payload,tmp_notificationRequestNewIN_in, request, db)
     if is_actor_online(itemBeneficiary_seedor):
         send_to_actor(itemBeneficiary_seedor, str(response_data.dict()))
         response_data.isactiveConnection=True
@@ -814,15 +890,23 @@ async def load_states(request: Request,db: Session = Depends(get_db)):
       response.headers["X-Access-Token"] = token
       return response
 
-@app.get("/seedor/1.0/load/address")
+@app.post("/seedor/1.0/validate/address/pin")
 async def load_validate_address(lovAddressIn: LovAddressIn,request: Request,db: Session = Depends(get_db)):
     #   verify_basic_auth(manual_basic_auth(request))
       # Rate limit check (basic)
       #check_rate_limit(request)
       token=get_bearer_token(request)
       payload=verify_access_token(token)
+      country_code= lovAddressIn.country_code
       
-      response_data=lookup_zip(lovAddressIn)
+     # if country_code.upper()=="US" or country_code.upper()=="USA" or country_code.upper()=="CA" or country_code.upper()=="CAN":
+     #     response_data=lookup_us_ca_zip(lovAddressIn)
+     # elif country_code.upper=="IN" or country_code.upper()=="IND":
+     #     response_data=lookup_india_pin(lovAddressIn) 
+     # else:
+          
+      response_data={"STATUS": "SUCCESS", "message": "Pin/Zip code validation not supported for this country"}   
+
       token=""    
       response = JSONResponse(status_code=200, content=response_data)
       response.headers["X-Access-Token"] = token

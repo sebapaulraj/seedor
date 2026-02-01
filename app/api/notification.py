@@ -180,7 +180,8 @@ def createNotification(payload: dict,notificationRequestNewIN_in: NotificationRe
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Notification Created Successfully"
 
-    except IntegrityError as e:            
+    except IntegrityError as e:  
+        print(e)          
         db.rollback()
         raise HTTPException(status_code=400, detail="Notification Failed")        
 

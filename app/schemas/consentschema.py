@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, constr
 from typing import List, Optional
 from app.db.consentmodel import Consent
@@ -39,6 +40,10 @@ class ConsentRequest(BaseModel):
     consentValididtyFrequency:str
     requestedBy:str
     requestedTo:str
+    createdBy:str
+    updatedBy:str
+    createdDate:datetime  
+    updatedDate:datetime  
     seqCounter:int
 
 class ConsentRequestOut(BaseModel):

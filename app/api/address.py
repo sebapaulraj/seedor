@@ -8,11 +8,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from app.api.access import getTypeIdAccess
 from app.core.config import settings
+from app.db.accessmodel import Access
 from app.db.db import get_db, engine
 from app.db.usermodel import Profile
 from app.db.addressmodel import Base, Address
-from app.schemas.schemas import AddressBase, AddressDeleteIN, AddressNewIN, AddressOut, AddressGetIN,AddressGetOUT,AddressUpdateIN
+from app.schemas.schemas import AccessGetIdTypeIN, AddressBase, AddressBaseOut, AddressDeleteIN, AddressNewIN, AddressOut, AddressGetIN,AddressGetOUT,AddressUpdateIN
 from app.api.auth import hash_password, create_access_token, verify_password,verify_access_token,get_bearer_token,manual_basic_auth,verify_basic_auth
 from app.core.rate_limit import check_rate_limit
 from email_validator import validate_email, EmailNotValidError
@@ -88,12 +90,11 @@ def updateAddress(payload: dict,address_in: AddressUpdateIN, request: Request, d
         isActive=False,
         statuscode="ERROR",
         statusmessage="Invalid Address Update"  
-        )
-    
-    new_Address=None
+        )    
+   
     if address_in.idaddress :
         if address_in.primaryAddress==True:
-            db.query(Address).filter_by(idUser=new_Address.idUser, primaryAddress=1).update({"primaryAddress": 0})
+            db.query(Address).filter_by(idUser=userId, primaryAddress=1).update({"primaryAddress": 0})
         
         new_Address = db.query(Address).filter(Address.idaddress == address_in.idaddress).first()
         #new_Address.isActive=address_in.isActive
@@ -136,11 +137,18 @@ def getAddressesId(payload: dict,address_in: AddressGetIN, request: Request, db:
         )
     
     address = db.query(Address).filter(Address.addressId == address_in.addressId).first()
+  
     if not address :
         response_data=address_listOut
         return response_data
-     
-    tmp_AddressBase=AddressBase(
+    
+    access_in=AccessGetIdTypeIN(accessTypeId=address.idaddress)
+    tmpresponse_data=getTypeIdAccess(payload,access_in, request, db)
+    if tmpresponse_data.statuscode!="SUCCESS":
+        tmp_AccessBase=None
+    else:
+        tmp_AccessBase = tmpresponse_data.listAccess[0]
+    tmp_AddressBase=AddressBaseOut(
             idaddress = address.idaddress, 
             addressId=address.addressId,
             isActive= address.isActive,
@@ -150,7 +158,8 @@ def getAddressesId(payload: dict,address_in: AddressGetIN, request: Request, db:
             area=address.area,
             city=address.city,
             postalCode=address.postalCode,
-            country=address.country
+            country=address.country,
+            access=tmp_AccessBase.accessStatus if tmp_AccessBase else "NONE"
         )  
     address_listOut.listAddress.append(tmp_AddressBase)
     address_listOut.statuscode="SUCCESS"
@@ -176,7 +185,9 @@ def getAddressesAll(payload: dict, request: Request, db: Session = Depends(get_d
     
     address_list=db.query(Address).filter(Address.idUser == userId).all()        
     for tmpAddress in address_list:
-        tmp_AddressBase=AddressBase(
+        access_in=AccessGetIdTypeIN(accessTypeId=tmpAddress.idaddress)
+        tmpresponse_data=getTypeIdAccess(payload,access_in, request, db)
+        tmp_AddressBase=AddressBaseOut(
             idaddress = tmpAddress.idaddress, 
             addressId=tmpAddress.addressId,
             isActive= tmpAddress.isActive,
@@ -186,7 +197,8 @@ def getAddressesAll(payload: dict, request: Request, db: Session = Depends(get_d
             area=tmpAddress.area,
             city=tmpAddress.city,
             postalCode=tmpAddress.postalCode,
-            country=tmpAddress.country
+            country=tmpAddress.country,
+            access=tmpresponse_data.listAccess[0].accessStatus if tmpresponse_data.statuscode=="SUCCESS" else "NONE"
         )            
         address_listOut.listAddress.append(tmp_AddressBase)
 

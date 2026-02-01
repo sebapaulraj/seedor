@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.core.config import settings
 from app.db.accessmodel import Access
 from app.db.consentmodel import ConsentRequest,Consent
 from app.db.db import get_db, engine
@@ -536,7 +535,7 @@ def getConsentOfferdId(payload: dict,consent_in: ConsentGetIN,request: Request, 
         )
 
     consent_list=db.query(Consent).filter(Consent.itemId == consent_in.itemId).filter(
-        Consent.itemOwnerIdUser==userId).all()
+        Consent.itemOwnerIdUser==userId).order_by(Consent.updatedDate.desc()).all()
     
     for tmpconsent in consent_list: 
         tmpconsentBaseModel=ConsentModel(
@@ -572,7 +571,7 @@ def getConsentOfferdAll(payload: dict,request: Request, db: Session = Depends(ge
         statusmessage="No Consent Found" 
         )
 
-    consent_list=db.query(Consent).filter(Consent.itemOwnerIdUser == userId).all()
+    consent_list=db.query(Consent).filter(Consent.itemOwnerIdUser == userId).order_by(Consent.updatedDate.desc()).all()
     for tmpconsent in consent_list: 
         tmpconsentBaseModel=ConsentModel(
             itemOwnerIdUser= tmpconsent.itemOwnerIdUser,
@@ -647,7 +646,7 @@ def getConsentSignedId(payload: dict,consent_in: ConsentGetIN,request: Request, 
         )
 
     consent_list=db.query(Consent).filter(Consent.itemId == consent_in.itemId).filter(
-        Consent.itemBeneficiaryIdUser==userId).all()
+        Consent.itemBeneficiaryIdUser==userId).order_by(Consent.itemId,Consent.updatedDate.desc()).all()
     
     for tmpconsent in consent_list: 
         tmpconsentBaseModel=ConsentModel(
@@ -683,7 +682,7 @@ def getConsentSignedAll(payload: dict,request: Request, db: Session = Depends(ge
         statusmessage="No Consent Found" 
         )
 
-    consent_list=db.query(Consent).filter(Consent.itemBeneficiaryIdUser == userId).all()
+    consent_list=db.query(Consent).filter(Consent.itemBeneficiaryIdUser == userId).order_by(Consent.itemId,Consent.updatedDate.desc()).all()
     for tmpconsent in consent_list: 
         tmpconsentBaseModel=ConsentModel(
             itemOwnerIdUser= tmpconsent.itemOwnerIdUser,

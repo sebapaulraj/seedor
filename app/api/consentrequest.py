@@ -592,7 +592,7 @@ def getconsentRequestHistoryItemType(payload: dict,consentReq_in: ConsentRequest
         )
 
     consent_list=db.query(ConsentRequest).filter(ConsentRequest.itemType == consentReq_in.itemType).filter(
-        ConsentRequest.itemOwnerIdUser==userId).all()
+        ConsentRequest.itemOwnerIdUser==userId).order_by(ConsentRequest.itemId,ConsentRequest.seqCounter.desc()).all()
     
     for tmpconsentRequ in consent_list: 
          tmp_OwnerProfile=db.query(Profile).filter(Profile.authIduser==tmpconsentRequ.itemOwnerIdUser).first()
@@ -607,6 +607,10 @@ def getconsentRequestHistoryItemType(payload: dict,consentReq_in: ConsentRequest
             consentValididtyFrequency=tmpconsentRequ.consentValididtyFrequency,
             requestedBy=tmpconsentRequ.requestedBy,
             requestedTo=tmpconsentRequ.requestedTo,
+            createdBy=tmpconsentRequ.createdBy,
+            updatedBy=tmpconsentRequ.updatedBy,
+            createdDate=tmpconsentRequ.createdDate,
+            updatedDate=tmpconsentRequ.updatedDate,
             seqCounter=tmpconsentRequ.seqCounter,
                   
          )
@@ -686,7 +690,7 @@ def getconsentRequestBeneficiaryHistoryItemType(payload: dict,consentReq_in: Con
         )
 
     consent_list=db.query(ConsentRequest).filter(ConsentRequest.itemType == consentReq_in.itemType).filter(
-        ConsentRequest.itemBeneficiaryIdUser==userId).all()
+        ConsentRequest.itemBeneficiaryIdUser==userId).order_by(ConsentRequest.itemId,ConsentRequest.seqCounter.desc()).all()
     
     for tmpconsentRequ in consent_list: 
          tmp_OwnerProfile=db.query(Profile).filter(Profile.authIduser==tmpconsentRequ.itemOwnerIdUser).first()
@@ -701,6 +705,10 @@ def getconsentRequestBeneficiaryHistoryItemType(payload: dict,consentReq_in: Con
             consentValididtyFrequency=tmpconsentRequ.consentValididtyFrequency,
             requestedBy=tmpconsentRequ.requestedBy,
             requestedTo=tmpconsentRequ.requestedTo,
+            createdBy=tmpconsentRequ.createdBy,
+            updatedBy=tmpconsentRequ.updatedBy,
+            createdDate=tmpconsentRequ.createdDate,
+            updatedDate=tmpconsentRequ.updatedDate,
             seqCounter=tmpconsentRequ.seqCounter,
                   
          )

@@ -158,6 +158,19 @@ class AddressBase(BaseModel):
     city:str
     postalCode:str
     country:str
+
+class AddressBaseOut(BaseModel):
+    idaddress : str 
+    addressId : str
+    isActive: bool
+    label: str
+    primaryAddress: bool
+    street:str
+    area:str
+    city:str
+    postalCode:str
+    country:str
+    access:str
     
 
 class AddressNewIN(BaseModel):
@@ -189,7 +202,7 @@ class AddressGetIN(BaseModel):
     addressId:str =Field(min_length=3, max_length=45)
    
 class AddressGetOUT(BaseModel):
-    listAddress:List[AddressBase]
+    listAddress:List[AddressBaseOut]
     statuscode:str
     statusmessage:str
    

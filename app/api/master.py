@@ -202,9 +202,22 @@ def insert_states(db: Session):
     return response_out
 
 
+def lookup_india_pin(lovAddressIn: LovAddressIn):
+   # country_code= lovAddressIn.country_code
+    postal_code= lovAddressIn.postal_code
+    url = f"https://api.postalpincode.in/pincode/{postal_code}"
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        return {"STATUS": "FAILED", "message": "No data found"}
+    if not resp:
+        return {"STATUS": "FAILED", "message": "No data found"}
+    
+    return resp.json()
 
-def lookup_zip(lovAddressIn: LovAddressIn):
+
+def lookup_us_ca_zip(lovAddressIn: LovAddressIn):
     country_code= lovAddressIn.country_code
+    country_code= country_code[:2]
     postal_code= lovAddressIn.postal_code
     url = f"https://api.zippopotam.us/{country_code}/{postal_code}"
     resp = requests.get(url)
@@ -215,6 +228,9 @@ def lookup_zip(lovAddressIn: LovAddressIn):
     
     return resp.json()
 
+
+def lookup_other(lovAddressIn: LovAddressIn): 
+    return {"STATUS": "SUCCESS", "message": "No data found"}
 
 # Example
 # data = lookup_zip("us", "90210")
