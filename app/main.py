@@ -533,6 +533,10 @@ async def consentRequestOffer(consent_in: ConsentRequestNewIN, request: Request,
     itemBeneficiary_seedor = response_data.itemBeneficiarySeedor
     tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
         notificationType="INFO",
+        templateCode="TPL_CONREQ_ACCEPT",
+        deliveryMethod="PUSH",
+        messageTitle="Consent Request Created",
+        messageSubject="Consent Request Raised Successfully",
         senderSeedorId=response_data.itemOwnerSeedorId,
         receiverSeedorId=itemBeneficiary_seedor,
         itemId=response_data.idconsentrequest,

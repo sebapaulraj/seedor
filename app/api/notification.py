@@ -162,9 +162,9 @@ def createNotification(payload: dict,notificationRequestNewIN_in: NotificationRe
         notificationType=notificationRequestNewIN_in.notificationType,
         templateCode=notificationRequestNewIN_in.templateCode,
         deliveryMethod=notificationRequestNewIN_in.deliveryMethod,
-        messageTitle=notificationRequestNewIN_in.messageTitle,
-        messageSubject=notificationRequestNewIN_in.messageSubject,
-        messagebody=notificationRequestNewIN_in.messagebody,
+        messageTitle=notificationRequestNewIN_in.messageTitle if notificationRequestNewIN_in.messageTitle else "",
+        messageSubject=notificationRequestNewIN_in.messageSubject if notificationRequestNewIN_in.messageSubject else "",
+        messagebody=notificationRequestNewIN_in.messagebody if notificationRequestNewIN_in.messagebody else "",
         attributes=notificationRequestNewIN_in.attributes,
         deliveryStatus="PENDING",
         readingStatus="UNREAD",
@@ -201,7 +201,7 @@ def getNotificationAllSender(payload: dict,request: Request, db: Session = Depen
         statusmessage="No Notification Found" 
         )
 
-    notification_list=db.query(Notification).filter(Notification.senderIdUser == userId).filter(Notification.status == "ACTIVE").all()      
+    notification_list=db.query(Notification).filter(Notification.senderIdUser == userId).filter(Notification.status == "ACTIVE").order_by(Notification.createdDate.desc()).all()      
     for tmpnotification in notification_list: 
         tmpnotificationBaseModel=NotificationModel(
             idnotification=tmpnotification.idnotification,
@@ -213,9 +213,9 @@ def getNotificationAllSender(payload: dict,request: Request, db: Session = Depen
             notificationType=tmpnotification.notificationType,
             templateCode=tmpnotification.templateCode,
             deliveryMethod=tmpnotification.deliveryMethod,
-            messageTitle=tmpnotification.messageTitle,
-            messageSubject=tmpnotification.messageSubject,
-            messagebody=tmpnotification.messagebody,
+            messageTitle=tmpnotification.messageTitle if tmpnotification.messageTitle else "",
+            messageSubject=tmpnotification.messageSubject if tmpnotification.messageSubject else "",
+            messagebody=tmpnotification.messagebody if tmpnotification.messagebody else "",
             deliveryStatus=tmpnotification.deliveryStatus,
             readingStatus=tmpnotification.readingStatus,           
             createdDate=str(tmpnotification.createdDate),
@@ -243,7 +243,7 @@ def getNotificationAllReceiver(payload: dict,request: Request, db: Session = Dep
         statusmessage="No Notification Found" 
         )
 
-    notification_list=db.query(Notification).filter(Notification.receiverIdUser == userId).filter(Notification.status == "ACTIVE").all()      
+    notification_list=db.query(Notification).filter(Notification.receiverIdUser == userId).filter(Notification.status == "ACTIVE").order_by(Notification.createdDate.desc()).all()      
     for tmpnotification in notification_list: 
         tmpnotificationBaseModel=NotificationModel(
             idnotification=tmpnotification.idnotification,
@@ -255,9 +255,9 @@ def getNotificationAllReceiver(payload: dict,request: Request, db: Session = Dep
             notificationType=tmpnotification.notificationType,
             templateCode=tmpnotification.templateCode,
             deliveryMethod=tmpnotification.deliveryMethod,
-            messageTitle=tmpnotification.messageTitle,
-            messageSubject=tmpnotification.messageSubject,
-            messagebody=tmpnotification.messagebody,
+            messageTitle=tmpnotification.messageTitle if tmpnotification.messageTitle else "",
+            messageSubject=tmpnotification.messageSubject if tmpnotification.messageSubject else "",
+            messagebody=tmpnotification.messagebody if tmpnotification.messagebody else "",
             deliveryStatus=tmpnotification.deliveryStatus,
             readingStatus=tmpnotification.readingStatus,           
             createdDate=str(tmpnotification.createdDate),
@@ -285,7 +285,7 @@ def getNotificationAllReceiverById(payload: dict,notificationRequestNewIN_in: No
         statusmessage="No Notification Found" 
         )
 
-    notification_list=db.query(Notification).filter(Notification.idnotification == notificationRequestNewIN_in.idnotification).filter(Notification.receiverIdUser == userId).all()      
+    notification_list=db.query(Notification).filter(Notification.idnotification == notificationRequestNewIN_in.idnotification).filter(Notification.receiverIdUser == userId).order_by(Notification.createdDate.desc()).all()      
     for tmpnotification in notification_list: 
         tmpnotificationBaseModel=NotificationModel(
             idnotification=tmpnotification.idnotification,
@@ -297,9 +297,9 @@ def getNotificationAllReceiverById(payload: dict,notificationRequestNewIN_in: No
             notificationType=tmpnotification.notificationType,
             templateCode=tmpnotification.templateCode,
             deliveryMethod=tmpnotification.deliveryMethod,
-            messageTitle=tmpnotification.messageTitle,
-            messageSubject=tmpnotification.messageSubject,
-            messagebody=tmpnotification.messagebody,
+            messageTitle=tmpnotification.messageTitle if tmpnotification.messageTitle else "",
+            messageSubject=tmpnotification.messageSubject if tmpnotification.messageSubject else "",
+            messagebody=tmpnotification.messagebody if tmpnotification.messagebody else "",
             deliveryStatus=tmpnotification.deliveryStatus,
             readingStatus=tmpnotification.readingStatus,           
             createdDate=str(tmpnotification.createdDate),
@@ -327,7 +327,7 @@ def getNotificationAllReceiverByDeliveryStatus(payload: dict,notificationRequest
         statusmessage="No Notification Found" 
         )
 
-    notification_list=db.query(Notification).filter(Notification.deliveryStatus == notificationRequestNewIN_in.deliveryStatus).filter(Notification.receiverIdUser == userId).all()      
+    notification_list=db.query(Notification).filter(Notification.deliveryStatus == notificationRequestNewIN_in.deliveryStatus).filter(Notification.receiverIdUser == userId).order_by(Notification.createdDate.desc()).all()      
     for tmpnotification in notification_list: 
         tmpnotificationBaseModel=NotificationModel(
             idnotification=tmpnotification.idnotification,
@@ -339,9 +339,9 @@ def getNotificationAllReceiverByDeliveryStatus(payload: dict,notificationRequest
             notificationType=tmpnotification.notificationType,
             templateCode=tmpnotification.templateCode,
             deliveryMethod=tmpnotification.deliveryMethod,
-            messageTitle=tmpnotification.messageTitle,
-            messageSubject=tmpnotification.messageSubject,
-            messagebody=tmpnotification.messagebody,
+            messageTitle=tmpnotification.messageTitle if tmpnotification.messageTitle else "",
+            messageSubject=tmpnotification.messageSubject if tmpnotification.messageSubject else "",
+            messagebody=tmpnotification.messagebody if tmpnotification.messagebody else "",
             deliveryStatus=tmpnotification.deliveryStatus,
             readingStatus=tmpnotification.readingStatus,           
             createdDate=str(tmpnotification.createdDate),
@@ -370,7 +370,7 @@ def getNotificationAllReceiverByReadingStatus(payload: dict,notificationRequestN
         statusmessage="No Notification Found" 
         )
 
-    notification_list=db.query(Notification).filter(Notification.readingStatus == notificationRequestNewIN_in.readingStatus).filter(Notification.receiverIdUser == userId).all()      
+    notification_list=db.query(Notification).filter(Notification.readingStatus == notificationRequestNewIN_in.readingStatus).filter(Notification.receiverIdUser == userId).order_by(Notification.createdDate.desc()).all()      
     for tmpnotification in notification_list: 
         tmpnotificationBaseModel=NotificationModel(
             idnotification=tmpnotification.idnotification,
@@ -382,9 +382,9 @@ def getNotificationAllReceiverByReadingStatus(payload: dict,notificationRequestN
             notificationType=tmpnotification.notificationType,
             templateCode=tmpnotification.templateCode,
             deliveryMethod=tmpnotification.deliveryMethod,
-            messageTitle=tmpnotification.messageTitle,
-            messageSubject=tmpnotification.messageSubject,
-            messagebody=tmpnotification.messagebody,
+            messageTitle=tmpnotification.messageTitle if tmpnotification.messageTitle else "",
+            messageSubject=tmpnotification.messageSubject if tmpnotification.messageSubject else "",
+            messagebody=tmpnotification.messagebody if tmpnotification.messagebody else "",
             deliveryStatus=tmpnotification.deliveryStatus,
             readingStatus=tmpnotification.readingStatus,           
             createdDate=str(tmpnotification.createdDate),
@@ -412,7 +412,7 @@ def getNotificationAllSenderById(payload: dict,notificationRequestNewIN_in: Noti
         statusmessage="No Notification Found" 
         )
 
-    notification_list=db.query(Notification).filter(Notification.idnotification == notificationRequestNewIN_in.idnotification).filter(Notification.senderIdUser == userId).all()      
+    notification_list=db.query(Notification).filter(Notification.idnotification == notificationRequestNewIN_in.idnotification).filter(Notification.senderIdUser == userId).order_by(Notification.createdDate.desc()).all()      
     for tmpnotification in notification_list: 
         tmpnotificationBaseModel=NotificationModel(
             idnotification=tmpnotification.idnotification,
@@ -424,9 +424,9 @@ def getNotificationAllSenderById(payload: dict,notificationRequestNewIN_in: Noti
             notificationType=tmpnotification.notificationType,
             templateCode=tmpnotification.templateCode,
             deliveryMethod=tmpnotification.deliveryMethod,
-            messageTitle=tmpnotification.messageTitle,
-            messageSubject=tmpnotification.messageSubject,
-            messagebody=tmpnotification.messagebody,
+            messageTitle=tmpnotification.messageTitle if tmpnotification.messageTitle else "",
+            messageSubject=tmpnotification.messageSubject if tmpnotification.messageSubject else "",
+            messagebody=tmpnotification.messagebody if tmpnotification.messagebody else "",
             deliveryStatus=tmpnotification.deliveryStatus,
             readingStatus=tmpnotification.readingStatus,           
             createdDate=str(tmpnotification.createdDate),
@@ -454,7 +454,7 @@ def getNotificationAllSenderByDeliveryStatus(payload: dict,notificationRequestNe
         statusmessage="No Notification Found" 
         )
 
-    notification_list=db.query(Notification).filter(Notification.deliveryStatus == notificationRequestNewIN_in.deliveryStatus).filter(Notification.senderIdUser == userId).all()      
+    notification_list=db.query(Notification).filter(Notification.deliveryStatus == notificationRequestNewIN_in.deliveryStatus).filter(Notification.senderIdUser == userId).order_by(Notification.createdDate.desc()).all()      
     for tmpnotification in notification_list: 
         tmpnotificationBaseModel=NotificationModel(
             idnotification=tmpnotification.idnotification,
@@ -466,9 +466,9 @@ def getNotificationAllSenderByDeliveryStatus(payload: dict,notificationRequestNe
             notificationType=tmpnotification.notificationType,
             templateCode=tmpnotification.templateCode,
             deliveryMethod=tmpnotification.deliveryMethod,
-            messageTitle=tmpnotification.messageTitle,
-            messageSubject=tmpnotification.messageSubject,
-            messagebody=tmpnotification.messagebody,
+            messageTitle=tmpnotification.messageTitle if tmpnotification.messageTitle else "",
+            messageSubject=tmpnotification.messageSubject if tmpnotification.messageSubject else "",
+            messagebody=tmpnotification.messagebody if tmpnotification.messagebody else "",
             deliveryStatus=tmpnotification.deliveryStatus,
             readingStatus=tmpnotification.readingStatus,           
             createdDate=str(tmpnotification.createdDate),
@@ -497,7 +497,7 @@ def getNotificationAllSenderByReadingStatus(payload: dict,notificationRequestNew
         statusmessage="No Notification Found" 
         )
 
-    notification_list=db.query(Notification).filter(Notification.readingStatus == notificationRequestNewIN_in.readingStatus).filter(Notification.senderIdUser == userId).all()      
+    notification_list=db.query(Notification).filter(Notification.readingStatus == notificationRequestNewIN_in.readingStatus).filter(Notification.senderIdUser == userId).order_by(Notification.createdDate.desc()).all()      
     for tmpnotification in notification_list: 
         tmpnotificationBaseModel=NotificationModel(
             idnotification=tmpnotification.idnotification,
@@ -509,9 +509,9 @@ def getNotificationAllSenderByReadingStatus(payload: dict,notificationRequestNew
             notificationType=tmpnotification.notificationType,
             templateCode=tmpnotification.templateCode,
             deliveryMethod=tmpnotification.deliveryMethod,
-            messageTitle=tmpnotification.messageTitle,
-            messageSubject=tmpnotification.messageSubject,
-            messagebody=tmpnotification.messagebody,
+            messageTitle=tmpnotification.messageTitle if tmpnotification.messageTitle else "",
+            messageSubject=tmpnotification.messageSubject if tmpnotification.messageSubject else "",
+            messagebody=tmpnotification.messagebody if tmpnotification.messagebody else "",
             deliveryStatus=tmpnotification.deliveryStatus,
             readingStatus=tmpnotification.readingStatus,           
             createdDate=str(tmpnotification.createdDate),

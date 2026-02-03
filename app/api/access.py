@@ -86,7 +86,7 @@ def revokeAccess(payload: dict,access_in: AccessNewIN, request: Request, db: Ses
         raise HTTPException(status_code=400, detail="Access Type Mismatch")
     
     if tmp_access and tmp_access.accessStatus=="PRIVATE":
-        raise HTTPException(status_code=400, detail="Access Already Public")
+        raise HTTPException(status_code=400, detail="Access Already Private")
     
     
     tmp_count = (tmp_access.seqCounter if tmp_access else 0) + 1

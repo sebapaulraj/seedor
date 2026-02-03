@@ -260,6 +260,7 @@ class AgreementBase(BaseModel):
     content:str  
     details:str
     isActive:bool
+    access:str
    
 
 class AgreementNewIN(BaseModel):
@@ -302,15 +303,18 @@ class AgreementGetOUT(BaseModel):
 class ShipmentBase(BaseModel):
     idshipment:str
     shipmentCode:str 
-    agencyId : str 
-    agencyId : str
+    agencyId : str    
     label : str
     shipperId:str
     shipperName:str
     description:str
     deliveryId:str
     isActive:bool
+    createdBy:str
     createdDate:datetime
+    updatedBy:str
+    updatedDate:datetime
+    access:str
 
 
 class ShipmentNewIN(BaseModel):

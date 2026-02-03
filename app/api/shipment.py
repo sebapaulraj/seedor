@@ -9,12 +9,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from app.api.access import getTypeIdAccess
 from app.core.config import settings
 from app.db.db import get_db, engine
 from app.db.usermodel import Profile
 from app.db.shipmentmodel import Shipment
 from app.db.models import Base
-from app.schemas.schemas import ShipmentNewIN, ShipmentOut, ShipmentGetIN,ShipmentGetOUT,ShipmentUpdateIN
+from app.schemas.schemas import AccessGetIdTypeIN, ShipmentBase, ShipmentNewIN, ShipmentOut, ShipmentGetIN,ShipmentGetOUT,ShipmentUpdateIN
 
 
 def addShipment(payload: dict,shipment_in: ShipmentNewIN, request: Request, db: Session = Depends(get_db)):
@@ -131,20 +132,23 @@ def getShipmentAgent(payload: dict,request: Request, db: Session = Depends(get_d
         shipperUserseedorId=shipperUser.seedorId if shipperUser else "SEEDOR"  
         deliveryUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.deliveryId).first() 
         deliveryUserseedorId=deliveryUser.seedorId if deliveryUser else "SEEDOR"  
-        cur_Shipment=Shipment(
+        access_in=AccessGetIdTypeIN(accessTypeId=tmp_Shipment.idshipment)
+        tmpresponse_data=getTypeIdAccess(payload,access_in, request, db)
+        cur_Shipment=ShipmentBase(
             idshipment=tmp_Shipment.idshipment,
             shipmentCode=tmp_Shipment.shipmentCode,
             agencyId=agencyUser.seedorId,
             label=tmp_Shipment.label,
             shipperId=shipperUserseedorId,
-            shipperName=tmp_Shipment.shipperName,
-            description=tmp_Shipment.description,
+            shipperName=tmp_Shipment.shipperName if tmp_Shipment.shipperName else "",
+            description=tmp_Shipment.description if tmp_Shipment.description else "",
             deliveryId=deliveryUserseedorId,
             isActive=tmp_Shipment.isActive,
             createdBy=tmp_Shipment.createdBy,
             createdDate=tmp_Shipment.createdDate,
             updatedBy=tmp_Shipment.updatedBy,
-            updatedDate=tmp_Shipment.updatedDate    
+            updatedDate=tmp_Shipment.updatedDate,
+            access=tmpresponse_data.listAccess[0].accessStatus if tmpresponse_data.statuscode=="SUCCESS" else "NONE"
         )            
         shipment_listOut.listShipment.append(cur_Shipment)
     shipment_listOut.statuscode="SUCCESS"
@@ -154,7 +158,7 @@ def getShipmentAgent(payload: dict,request: Request, db: Session = Depends(get_d
 
     return response_data
 
-
+ 
 def getShipmentDelivery(payload: dict,request: Request, db: Session = Depends(get_db)):
     userId=payload["userid"]
     profileId=payload["profileId"]
@@ -175,20 +179,23 @@ def getShipmentDelivery(payload: dict,request: Request, db: Session = Depends(ge
         agencyUserseedorId=agencyUser.seedorId if agencyUser else "SEEDOR"
         shipperUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.shipperId).first()
         shipperUserseedorId=shipperUser.seedorId if shipperUser else "SEEDOR"
-        cur_Shipment=Shipment(
+        access_in=AccessGetIdTypeIN(accessTypeId=tmp_Shipment.idshipment)
+        tmpresponse_data=getTypeIdAccess(payload,access_in, request, db)
+        cur_Shipment=ShipmentBase(
             idshipment=tmp_Shipment.idshipment,
             shipmentCode=tmp_Shipment.shipmentCode,
             agencyId=agencyUserseedorId,
             label=tmp_Shipment.label,
             shipperId=shipperUserseedorId,
-            shipperName=tmp_Shipment.shipperName,
-            description=tmp_Shipment.description,
+            shipperName=tmp_Shipment.shipperName if tmp_Shipment.shipperName else "",
+            description=tmp_Shipment.description if tmp_Shipment.description else "",
             deliveryId=deliveryUser.seedorId,
             isActive=tmp_Shipment.isActive,
             createdBy=tmp_Shipment.createdBy,
             createdDate=tmp_Shipment.createdDate,
             updatedBy=tmp_Shipment.updatedBy,
-            updatedDate=tmp_Shipment.updatedDate    
+            updatedDate=tmp_Shipment.updatedDate,
+            access=tmpresponse_data.listAccess[0].accessStatus if tmpresponse_data.statuscode=="SUCCESS" else "NONE"    
         )                
         shipment_listOut.listShipment.append(cur_Shipment)
     shipment_listOut.statuscode="SUCCESS"
@@ -219,20 +226,23 @@ def getShipmentShipper(payload: dict,request: Request, db: Session = Depends(get
         agencyUserseedorId=agencyUser.seedorId if agencyUser else "SEEDOR"
         deliveryUser=db.query(Profile).filter(Profile.authIduser == tmp_Shipment.deliveryId).first()
         deliveryUserseedorId=deliveryUser.seedorId if deliveryUser else "SEEDOR"
-        cur_Shipment=Shipment(
+        access_in=AccessGetIdTypeIN(accessTypeId=tmp_Shipment.idshipment)
+        tmpresponse_data=getTypeIdAccess(payload,access_in, request, db)
+        cur_Shipment=ShipmentBase(
             idshipment=tmp_Shipment.idshipment,
             shipmentCode=tmp_Shipment.shipmentCode,
             agencyId=agencyUserseedorId,
             label=tmp_Shipment.label,
             shipperId=shipperUser.seedorId,
-            shipperName=tmp_Shipment.shipperName,
-            description=tmp_Shipment.description,
+            shipperName=tmp_Shipment.shipperName if tmp_Shipment.shipperName else "",
+            description=tmp_Shipment.description if tmp_Shipment.description else "",
             deliveryId=deliveryUserseedorId,
             isActive=tmp_Shipment.isActive,
             createdBy=tmp_Shipment.createdBy,
             createdDate=tmp_Shipment.createdDate,
             updatedBy=tmp_Shipment.updatedBy,
-            updatedDate=tmp_Shipment.updatedDate    
+            updatedDate=tmp_Shipment.updatedDate,
+            access=tmpresponse_data.listAccess[0].accessStatus if tmpresponse_data.statuscode=="SUCCESS" else "NONE"        
         )            
         shipment_listOut.listShipment.append(cur_Shipment)
     shipment_listOut.statuscode="SUCCESS"

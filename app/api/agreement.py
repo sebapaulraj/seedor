@@ -8,12 +8,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from app.api.access import getTypeIdAccess
 from app.core.config import settings
 from app.db.db import get_db, engine
 from app.db.usermodel import Profile
 from app.db.agreementmodel import Agreement
 from app.db.models import Base
-from app.schemas.schemas import AgreementBase, AgreementDeleteIN, AgreementNewIN, AgreementOut, AgreementGetIN,AgreementGetOUT,AgreementUpdateIN
+from app.schemas.schemas import AccessGetIdTypeIN, AgreementBase, AgreementDeleteIN, AgreementNewIN, AgreementOut, AgreementGetIN,AgreementGetOUT,AgreementUpdateIN
 
 
 def addAgreement(payload: dict,agreement_in: AgreementNewIN, request: Request, db: Session = Depends(get_db)):
@@ -123,8 +124,20 @@ def getAgreementId(payload: dict,agreement_in: AgreementGetIN, request: Request,
         )
       
     tmp_agreement = db.query(Agreement).filter(Agreement.agreementId == agreement_in.agreementId).first()
-    
-    agreement_listOut.listAgreement.append(tmp_agreement)
+    access_in=AccessGetIdTypeIN(accessTypeId=tmp_agreement.idagreement)
+    tmpresponse_data=getTypeIdAccess(payload,access_in, request, db)
+    tmp_agreementBase=AgreementBase(
+        idagreement=tmp_agreement.idagreement,
+        agreementId= tmp_agreement.agreementId,
+        label= tmp_agreement.label,
+        title= tmp_agreement.title,
+        summary= tmp_agreement.summary,
+        content= tmp_agreement.content,
+        details=tmp_agreement.details,
+        isActive=tmp_agreement.isActive,
+        access=tmpresponse_data.listAccess[0].accessStatus if tmpresponse_data.listAccess else "None"            
+        )            
+    agreement_listOut.listAgreement.append(tmp_agreementBase)
     agreement_listOut.statuscode="SUCCESS"
     agreement_listOut.statusmessage="Agreement Found"                 
     
@@ -148,6 +161,8 @@ def getAgreementAll(payload: dict, request: Request, db: Session = Depends(get_d
       
     agreement_list=db.query(Agreement).filter(Agreement.idUser == userId).all() 
     for tmpAgreement in agreement_list:
+        access_in=AccessGetIdTypeIN(accessTypeId=tmpAgreement.idagreement)
+        tmpresponse_data=getTypeIdAccess(payload,access_in, request, db)
         tmp_agreementBase=AgreementBase(
         idagreement=tmpAgreement.idagreement,
         agreementId= tmpAgreement.agreementId,
@@ -156,7 +171,8 @@ def getAgreementAll(payload: dict, request: Request, db: Session = Depends(get_d
         summary= tmpAgreement.summary,
         content= tmpAgreement.content,
         details=tmpAgreement.details,
-        isActive=tmpAgreement.isActive            
+        isActive=tmpAgreement.isActive,
+        access=tmpresponse_data.listAccess[0].accessStatus if tmpresponse_data.listAccess else "None"            
         )                
         agreement_listOut.listAgreement.append(tmp_agreementBase)
 
