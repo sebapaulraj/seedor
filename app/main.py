@@ -1,5 +1,6 @@
 import os
 import json
+import threading
 from fastapi import FastAPI, Depends, HTTPException, Path, Query, status, Request,WebSocket
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,10 +14,11 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.api.access import getAccessById, getHistoryAccess, getHistoryAccessAll, getPublicAccess, getTypeIdAccess,grandAccess, revokeAccess
 from app.api.address import addAddress, deleteAddress,getAddressesAll, getAddressesId, updateAddress
 from app.api.agreement import addAgreement, deleteAgreement,getAgreementAll, getAgreementId, updateAgreement
-from app.api.notification import UpdateNotificationDelete, UpdateNotificationDelete, UpdateNotificationDelivery, UpdateNotificationReadReceipt, UpdateNotificationReadReceipt, createNotification, getNotificationAllReceiver, getNotificationAllReceiverByDeliveryStatus, getNotificationAllReceiverById, getNotificationAllReceiverByReadingStatus,getNotificationAllSender, getNotificationAllSenderByDeliveryStatus, getNotificationAllSenderById, getNotificationAllSenderById, getNotificationAllSenderByReadingStatus
+from app.api.notification import UpdateNotificationAllSeedoridDelivery, UpdateNotificationDelete, UpdateNotificationDelete, UpdateNotificationDelivery, UpdateNotificationReadReceipt, UpdateNotificationReadReceipt, createNotification, getNotificationAllReceiver, getNotificationAllReceiverByDeliveryStatus, getNotificationAllReceiverById, getNotificationAllReceiverByReadingStatus,getNotificationAllSender, getNotificationAllSenderByDeliveryStatus, getNotificationAllSenderById, getNotificationAllSenderById, getNotificationAllSenderByReadingStatus
 from app.core.config import settings
 from app.api.consent import   getConsentOfferdAll, getConsentOfferdId,  getConsentSignedAll, getConsentSignedId
 from app.api.consentrequest import acceptConsentOffer, acceptConsentRequest, createConsentOffer, createConsentRequest, getconsentRequestBeneficiaryHistoryItemId, getconsentRequestBeneficiaryHistoryItemType, getconsentRequestHistoryItemId, getconsentRequestHistoryItemType,rejectConsentOffer, rejectConsentRequest
+from app.core.worker import notification_worker
 from app.db.db import get_db, engine
 from app.db.usermodel import User,Profile
 from app.db.mastermodel import Lov
@@ -40,6 +42,11 @@ from datetime import datetime
 #Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Seedor Information Seeding API")
+
+
+@app.on_event("startup")
+def startup():
+    threading.Thread(target=notification_worker, daemon=True).start()
 
 # In-memory store for active WebSocket connections and their messages
 active_connections: dict[str, WebSocket] = {}
@@ -504,7 +511,7 @@ async def consentRequestCreate(consent_in: ConsentRequestNewIN, request: Request
     tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
         notificationType="INFO",
         templateCode="TPL_CONREQ_INFO",
-        deliveryMethod="PUSH",
+        deliveryMethod="PUSH,EMAIL",
         messageTitle="Consent Request Created",
         messageSubject="Consent Request Raised Successfully",
         senderSeedorId=itemOwner_seedor,
@@ -534,7 +541,7 @@ async def consentRequestOffer(consent_in: ConsentRequestNewIN, request: Request,
     tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
         notificationType="INFO",
         templateCode="TPL_CONREQ_ACCEPT",
-        deliveryMethod="PUSH",
+        deliveryMethod="PUSH,EMAIL",
         messageTitle="Consent Request Created",
         messageSubject="Consent Request Raised Successfully",
         senderSeedorId=response_data.itemOwnerSeedorId,
@@ -564,7 +571,7 @@ async def consentRequestAcceptRequest(consent_in: ConsentRequestNewIN, request: 
     tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
         notificationType="INFO",
         templateCode="TPL_CONREQ_ACCEPT",
-        deliveryMethod="PUSH",
+        deliveryMethod="PUSH,EMAIL",
         messageTitle="Consent Request Created",
         messageSubject="Consent Request Raised Successfully",
         senderSeedorId=response_data.itemBeneficiarySeedor,
@@ -595,7 +602,7 @@ async def consentRequestAcceptOffer(consent_in: ConsentRequestNewIN, request: Re
     tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
         notificationType="INFO",
         templateCode="TPL_CONREQ_ACCEPT",
-        deliveryMethod="PUSH",
+        deliveryMethod="PUSH,EMAIL",
         messageTitle="Consent Request Created",
         messageSubject="Consent Request Raised Successfully",
         senderSeedorId=response_data.itemOwnerSeedorId,
@@ -626,7 +633,7 @@ async def consentRejectRequestReject(consent_in: ConsentRequestNewIN, request: R
     tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
         notificationType="INFO",
         templateCode="TPL_CONREQ_REJECT",
-        deliveryMethod="PUSH",
+        deliveryMethod="PUSH,EMAIL",
         messageTitle="Consent Request Rejected",
         messageSubject="Consent Request Rejected Successfully",
         senderSeedorId=response_data.itemBeneficiarySeedor,
@@ -656,7 +663,7 @@ async def consentRejectRequestOffer(consent_in: ConsentRequestNewIN, request: Re
     tmp_notificationRequestNewIN_in= NotificationRequestNewIN(
         notificationType="INFO",
         templateCode="TPL_CONREQ_REJECT",
-        deliveryMethod="PUSH",
+        deliveryMethod="PUSH,EMAIL",
         messageTitle="Consent Request Rejected",
         messageSubject="Consent Request Rejected Successfully",
         senderSeedorId=response_data.itemOwnerSeedorId,
@@ -1033,6 +1040,17 @@ async def notificationGetSender(request: Request, db: Session = Depends(get_db),
     payload=verify_access_token(token)
     notificationRequestNewIN_in= NotificationRequestIN(idnotification=id,deliveryStatus="",readingStatus="")
     response_data=UpdateNotificationDelivery(payload,notificationRequestNewIN_in,request, db)
+    response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
+    response.headers["X-Access-Token"] = str(token)
+    return response
+
+@app.put("/seedor/1.0/notification/seedor/delivered", response_model=NotificationOut, status_code=201)
+async def notificationAllDelivered(request: Request, db: Session = Depends(get_db)):
+    # Rate limit check (basic)
+    #check_rate_limit(request)
+    token=get_bearer_token(request)
+    payload=verify_access_token(token)   
+    response_data=UpdateNotificationAllSeedoridDelivery(payload,request, db)
     response = JSONResponse(status_code=200, content=jsonable_encoder(response_data))
     response.headers["X-Access-Token"] = str(token)
     return response

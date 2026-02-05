@@ -137,9 +137,11 @@ def getAccessById(payload: dict,access_in: AccessGetIdIN, request: Request, db: 
             return response_data
         
         tmp_access = db.query(Access).filter(Access.idaccess == access_in.idaccess).filter(Access.seqCounter==tmp_seq).first()
+        profileseedorid=db.query(Profile).filter(Profile.authIduser == tmp_access.idUser).first()
         tmp_AccessBase=AccessBase(
             idaccess =tmp_access.idaccess,
-            idUser=tmp_access.idUser,  
+            idUser=tmp_access.idUser, 
+            ownerseedorid=profileseedorid.seedorId if profileseedorid else "", 
             accessTypeId=tmp_access.accessTypeId,
             accessTypeValue=tmp_access.accessTypeValue,
             accessGrantedOn=str(tmp_access.accessGrantedOn),
@@ -175,9 +177,11 @@ def getTypeIdAccess(payload: dict,access_in: AccessGetIdTypeIN, request: Request
             return response_data
         
         tmp_access = db.query(Access).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).filter(Access.seqCounter==tmp_seq).first()
+        profileseedorid=db.query(Profile).filter(Profile.authIduser == tmp_access.idUser).first()
         tmp_AccessBase=AccessBase(
             idaccess =tmp_access.idaccess,
             idUser=tmp_access.idUser,  
+            ownerseedorid=profileseedorid.seedorId if profileseedorid else "", 
             accessTypeId=tmp_access.accessTypeId,
             accessTypeValue=tmp_access.accessTypeValue,
             accessGrantedOn=str(tmp_access.accessGrantedOn),
@@ -213,9 +217,11 @@ def getHistoryAccess(payload: dict,access_in: AccessGetIdTypeIN, request: Reques
        # print(f"{access_in.accessTypeId} and {userId}")
         tmp_accesslist = db.query(Access).filter(Access.idUser == userId).filter(Access.accessTypeId == access_in.accessTypeId).order_by(desc(Access.createdDate)).all()
         for item_Access in tmp_accesslist:
+            profileseedorid=db.query(Profile).filter(Profile.authIduser == item_Access.idUser).first()
             tmp_AccessBase=AccessBase(
                 idaccess =item_Access.idaccess,
                 idUser=item_Access.idUser,  
+                ownerseedorid=profileseedorid.seedorId if profileseedorid else "", 
                 accessTypeId=item_Access.accessTypeId,
                 accessTypeValue=item_Access.accessTypeValue,
                 accessGrantedOn=str(item_Access.accessGrantedOn),
@@ -273,9 +279,11 @@ def getPublicAccess(payload: dict,accessPublic_in: AccessGetIdTypePublicIN, requ
         tmp_accesslist=query.all() 
         #tmp_accesslist = db.query(Access).filter(Access.idUser == tmp_userprofile.authIduser).filter(Access.accessTypeValue == accessPublic_in.accessTypeValue).filter(Access.accessStatus == "PUBLIC").order_by(desc(Access.createdDate)).all()
         for item_Access in tmp_accesslist:
+            profileseedorid=db.query(Profile).filter(Profile.authIduser == item_Access.idUser).first()
             tmp_AccessBase=AccessBase(
                 idaccess =item_Access.idaccess,
                 idUser=item_Access.idUser,  
+                ownerseedorid=profileseedorid.seedorId if profileseedorid else "", 
                 accessTypeId=item_Access.accessTypeId,
                 accessTypeValue=item_Access.accessTypeValue,
                 accessGrantedOn=str(item_Access.accessGrantedOn),
@@ -308,9 +316,11 @@ def getHistoryAccessAll(payload: dict,request: Request, db: Session = Depends(ge
        # print(f"{access_in.accessTypeId} and {userId}")
     tmp_accesslist = db.query(Access).filter(Access.idUser == userId).order_by(desc(Access.createdDate)).all()
     for item_Access in tmp_accesslist:
+        profileseedorid=db.query(Profile).filter(Profile.authIduser == item_Access.idUser).first()
         tmp_AccessBase=AccessBase(
             idaccess =item_Access.idaccess,
             idUser=item_Access.idUser,  
+            ownerseedorid=profileseedorid.seedorId if profileseedorid else "", 
             accessTypeId=item_Access.accessTypeId,
             accessTypeValue=item_Access.accessTypeValue,
             accessGrantedOn=str(item_Access.accessGrantedOn),

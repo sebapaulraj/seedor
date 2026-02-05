@@ -30,9 +30,17 @@ def validateItemType(itemType: str):
 
 def validateDeliveryMethod(deliveryMethod: str):
     valid_types=["EMAIL","SMS","PUSH"]
-    if deliveryMethod not in valid_types:
-        raise HTTPException(status_code=400, detail="Delivery Method Not Valid")
+    
+    methods = [m.strip() for m in deliveryMethod.split(",")]
+
+    invalid = [m for m in methods if m not in valid_types]
+
+    if invalid:
+        raise HTTPException(status_code=400, detail=f"Invalid delivery methods: {invalid}"
+        )
+
     return True
+
 
 def validateNotificationType(notificationType: str):
     valid_types=["ALERT","INFO","ERROR"]
@@ -60,6 +68,38 @@ def UpdateNotificationDelivery(payload: dict,notificationRequestNewIN_in: Notifi
         db.commit()
         db.refresh(new_notification) 
         response_data.listnotification.append(new_notification)
+        response_data.statuscode="SUCCESS"
+        response_data.statusmessage="Notification Delivered Successfully"
+
+    except IntegrityError as e:            
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Notification Failed")        
+
+    return response_data
+
+
+def UpdateNotificationAllSeedoridDelivery(payload: dict,request: Request, db: Session = Depends(get_db)):
+    # ensure unique email (handled by DB unique constraint but check to return friendly message)
+    userId=payload["userid"]
+    profileId=payload["profileId"]
+    email=payload["email"]    
+    
+    response_data=NotificationOut(
+        listnotification=[],
+        statuscode="ERROR",
+        statusmessage="Notification Delivery Failed"
+    ) 
+   
+    new_notifications=db.query(Notification).filter(Notification.receiverIdUser == userId).filter(Notification.deliveryMethod.contains('PUSH')).filter(Notification.deliveryStatus == 'PENDING').all()
+    if new_notifications is None:
+        raise HTTPException(status_code=400, detail="Notification Not Found")
+
+    try: 
+        for new_notification in new_notifications:             
+            new_notification.deliveryStatus="DELIVERED"           
+            db.commit()
+            db.refresh(new_notification) 
+            response_data.listnotification.extend(new_notifications)
         response_data.statuscode="SUCCESS"
         response_data.statusmessage="Notification Delivered Successfully"
 

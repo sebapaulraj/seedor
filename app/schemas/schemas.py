@@ -210,7 +210,8 @@ class AddressGetOUT(BaseModel):
 
 class AccessBase(BaseModel):
     idaccess :str    
-    idUser:str    
+    idUser:str   
+    ownerseedorid:str     
     accessTypeId :str
     accessTypeValue:str
     accessGrantedOn:str
